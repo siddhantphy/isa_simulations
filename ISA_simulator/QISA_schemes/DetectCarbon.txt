@@ -1,0 +1,33 @@
+LDi measureamount measureAmountReg
+LDi thresholdvalue TresHoldReg
+LDi start_time sweepStartTimeReg
+LDi t_max sweepStopTimeReg
+LDi stepsize sweepStepTimeReg
+LDi 0 MeasureCountReg
+LDi 0 PhotonCountReg
+LABEL loop
+LDi 0 PhotonRegister
+switch init
+wait time
+switch init
+BR PhotonRegister > TresHoldReg, loop
+mw duration_e/2 elec_freq 1.57 
+mw duration sweepStartFreqReg 0 
+mw duration_e elec_freq 0 
+mw duration sweepStartFreqReg 3.14
+mw duration_e elec_freq 0 
+mw duration_e/2 elec_freq 4.71
+switch measure
+wait time
+switch measure
+ADD PhotonCountReg, PhotonCountReg, PhotonRegister
+ADDi 1 MeasureCountReg
+BR MeasureCountReg < measureAmountReg loop
+ST PhotonCountReg memAddrCount($0)
+ST sweepstartTimeReg memAddrTime($0)
+ADDi memAddrCount, 4
+ADDi memAddrTime, 4
+ADD sweepStartTimeReg sweepStartTimeReg sweepStepTimeReg
+LDi 0 PhotonCountReg
+LDi 0 MeasureCountReg
+BR sweepStartTimeReg < sweepStopTimeReg loop

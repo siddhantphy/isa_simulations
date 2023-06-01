@@ -1,0 +1,13 @@
+#predefine tresholdvalue
+LDi 0 R0
+
+#Define start of the loop, if initialisation goes wrong
+LABEL loop
+#Reset the photonregister
+LDi 0 PhotonRegister
+#Turn on the initialisation laser for a certain amount of time
+switch init
+wait time
+switch init
+# Check if photons are counted.
+BR PhotonRegister > R0, loop

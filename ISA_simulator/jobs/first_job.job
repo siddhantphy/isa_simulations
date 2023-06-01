@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#SBATCH -J first-test                 # Job name
+#SBATCH -p general                     # Use the "general" partition (default)
+#SBATCH -n 1                           # Number of tasks/processes
+#SBATCH -c 2                          # We want real cores
+#SBATCH -t 0:30                       # Run time (mm:ss) 30 sec
+#SBATCH --mem 1GB                       # use 1MB
+
+module load devtoolset/8
+
+source /home/fwmderonde/virt_env_simulator/ISA_simulator/bin/activate
+python3 /home/fwmderonde/virt_env_simulator/ISA_simulator/current_simulator_code/tests.py test_job_save test_job_exc 1 1

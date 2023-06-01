@@ -1,0 +1,6 @@
+Initialize q0
+SwapEC q0 0 
+
+QgateCC q0 0 0 3.14
+
+Measure q0

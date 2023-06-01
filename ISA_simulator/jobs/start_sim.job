@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH -J start_sim                 # Job name
+#SBATCH -p general                     # Use the "general" partition (default)
+#SBATCH -n 1                           # Number of tasks/processes
+#SBATCH -c 2                          # We want real cores
+#SBATCH -t 0:30                       # Run time (mm:ss) 30 sec
+#SBATCH --mem 1GB                       # use 1MB
+
+apptainer exec /shares/bulk/singularity/rocky8-python3.sif /home/fwmderonde/virt_env_simulator/ISA_simulator/jobs/start_sim.sh

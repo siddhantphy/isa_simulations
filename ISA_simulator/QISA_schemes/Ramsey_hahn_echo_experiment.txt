@@ -1,0 +1,21 @@
+LDi 0 starttime
+LDi 50 steptime
+LDi 10000 stoptime
+LDi 0 measureCounter
+LDi 1000 MeasureAmount
+LABEL start
+init q0
+init_real q0
+QgateE q0 0 1.57 
+wait q0 starttime 
+QgateE q0 0 3.14
+wait q0 starttime 
+QgateE q0 0 1.57
+measure_real q0
+ST MeasureResultRegNVnode0 MeasureValueMem
+ADDi measureCounter 1
+BR measureCounter < MeasureAmount start
+ADD starttime starttime steptime
+LDi 0 measureCounter
+printer starttime
+BR starttime < stoptime start

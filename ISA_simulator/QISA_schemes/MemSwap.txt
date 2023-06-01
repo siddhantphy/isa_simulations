@@ -1,0 +1,13 @@
+mw duration_e/2 elec_freq 1.57 
+
+mw duration_c c_freq 0 
+mw duration_e elec_freq 0 
+mw duration_c c_freq 3.14 
+mw duration_e elec_freq 0 
+
+mw duration_e/2 elec_freq 0 
+
+mw duration_c c_freq 4.71 
+mw duration_e elec_freq 0 
+mw duration_c c_freq 1.57 
+mw duration_e elec_freq 0 

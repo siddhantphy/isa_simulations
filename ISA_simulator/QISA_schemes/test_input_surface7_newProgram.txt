@@ -1,0 +1,85 @@
+## preset registers
+LDi 1.35e-07 SweepStartReg
+LDi 0.5e-08 SweepStepReg
+LDi 2.8e-07 SweepStopReg
+LDi 3000 MeasureAmountReg
+LDi 0 MeasureStartReg
+LDi 0 SuccesCountReg
+#start the loopklkl
+
+LABEL Lab1
+init q0
+init q1
+init_real q0
+init_real q1
+memswap_electron_to_carbon 2 q0
+memswap_electron_to_carbon 2 q1
+init_real q0
+init_real q1
+memswap_electron_to_carbon 1 q0
+memswap_electron_to_carbon 1 q1
+init_real q0
+init_real q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q1
+excite_mw_carbon 0 SweepStartReg 1148000000 1.57 400e-6 1 q0
+excite_mw_carbon 0 SweepStartReg 1148000000 1.57 400e-6 2 q0
+init_real q0
+init_real q1
+GHZ_setter_2N NVnode0 NVnode1
+### cnot operations
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 1 q0
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 1 q1
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 2 q0
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 2 q1
+
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q1
+measure_real q0
+measure_real q1
+wait 1 q0
+wait 1 q1
+ADD TotalMeasure MeasureResultRegNVnode0 MeasureResultRegNVnode1
+printer TotalMeasure
+BR 1 < TotalMeasure ActuallyDone
+print i get here
+BR TotalMeasure < -1 ActuallyDone
+print i am where you expect me
+
+# interprint
+###
+init_real q0
+init_real q1
+# GHZ_setter_2N NVnode2 NVnode3
+### cz implementation on NVnode0
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q0
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 1 q0
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 1.57 400e-6 1 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 3.14 200e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 0 200e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q0
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q0
+
+### cz implementation on NVnode1
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q1
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 1 q1
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 1.57 400e-6 1 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 3.14 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 200e-6 q1
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 0 400e-6 2 q1
+excite_mw_carbon 0 2.7365789665416314e-07 1148000000 1.57 400e-6 2 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 3.14 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 1.57 200e-6 q1
+excite_mw 0 2.7365789665416314e-07 1722000000 0 400e-6 q1
+measure_real q0
+measure_real q1
+
+
+LABEL ActuallyDone

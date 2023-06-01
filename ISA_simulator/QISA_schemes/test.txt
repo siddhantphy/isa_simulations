@@ -1,0 +1,7 @@
+
+init q0
+init_real q0
+memswap_electron_to_carbon 0 q0
+QgateUC [1,0,0] 3.14 0 0 q0
+#measure_carbon Z 0 q0
+

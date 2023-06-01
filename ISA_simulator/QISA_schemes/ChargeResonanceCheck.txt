@@ -1,0 +1,12 @@
+LDi threshold, thresholdreg
+LABEL loop
+LDi 0, PhotonRegister
+switch init,measure
+wait time
+switch init,measure
+BR PhotonRegister>tresholdreg, stop
+switch pump
+wait time
+switch pump
+JUMP loop
+LABEL stop

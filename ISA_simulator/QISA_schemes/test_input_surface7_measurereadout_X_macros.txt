@@ -1,0 +1,212 @@
+## preset registers
+LDi 4.71 sweepAngleReg
+LDi 0.15 SweepStepReg
+LDi 0 SweepStopReg
+LDi 1 MeasureAmountReg
+LDi 0 MeasureStartReg
+LDi 0 SuccesCountReg
+LDi 0 TotalMeasureMul
+LDi 0 SuccesReg
+#start the loopklkl
+
+LABEL Lab1
+init q0
+init q1
+init_real q0
+init_real q1
+memswap_electron_to_carbon 1 q0
+memswap_electron_to_carbon 1 q1
+init_real q0
+init_real q1
+memswap_electron_to_carbon 0 q0
+memswap_electron_to_carbon 0 q1
+init_real q0
+init_real q1
+QgateUC [0,1,0] 1.57 0 0 q0
+
+QgateUC [0,1,0] 1.57 0 0 q1
+QgateUC [0,1,0] 4.71 1 0 q0
+QgateUC [0,1,0] 4.71 1 0 q1
+
+init_real q0
+GHZ_setter_2N NVnode0 NVnode1
+### cnot operations
+QgateCC [1,0,0] 3.14 0 q0
+QgateCC [1,0,0] 3.14 0 q1
+QgateCC [1,0,0] 3.14 1 q0
+QgateCC [1,0,0] 3.14 1 q1
+
+### hadamard on electrons
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 3.14 q0
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 3.14 q1
+measure_real q0
+measure_real q1
+wait 1 q0
+wait 1 q1
+ADD TotalMeasure MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasure < 2 SecondCheck
+#print after SecondCheck
+LABEL SecondCheckGood
+#print after secondcheckgood
+#ADDi SuccesCountReg 1
+#correcter x
+
+# interprint
+###
+init_real q0
+init_real q1
+# GHZ_setter_2N NVnode2 NVnode3
+### cz implementation on NVnode0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 3.14 q0
+QgateCC [1,0,0] 3.14 0 q0
+QgateCC [0,1,0] 3.14 0 q0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 1.57 q0
+
+QgateCC [1,0,0] 3.14 1 q0
+QgateCC [0,1,0] 3.14 1 q0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 1.57 q0
+
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 3.14 q0
+
+
+### cz implementation on NVnode1
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 3.14 q1
+QgateCC [1,0,0] 3.14 0 q1
+QgateCC [0,1,0] 3.14 0 q1
+QgateE [1,0,0] -1.57 q1
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 1.57 q1
+
+QgateCC [1,0,0] 3.14 1 q1
+QgateCC [0,1,0] 3.14 1 q1
+QgateE [1,0,0] -1.57 q1
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 1.57 q1
+
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 3.14 q1
+measure_real q0
+measure_real q1
+
+wait 1 q0
+wait 1 q1
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
+ADD TotalMeasure MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasure < 2 Stop
+
+LABEL YCount
+#print after Ycount
+init_real q0
+init_real q1
+
+ADDi SuccesCountReg 1
+LDi 1 SuccesReg
+
+#measure_carbon X 0 q0
+#measure_real q0
+#init_real q0
+#wait 1 q0
+#MOV resultstorer MeasureResultRegNVnode0
+#measure_carbon X 1 q0
+#measure_real q0
+#init_real q0
+#wait 1 q0
+#MUL CurrentMeasureValue MeasureResultRegNVnode0 resultstorer
+#MUL FirstMeasureMul MeasureResultRegNVnode0 MeasureResultRegNVnode1
+#measure_carbon Z 0 q1
+##measure_real q1
+#init_real q1
+#wait 1 q1
+#MOV resultstorer MeasureResultRegNVnode1
+#measure_carbon X 0 q1
+#measure_real q1
+#wait 1 q1
+#MUL SecondMeasureMul resultstorer MeasureResultRegNVnode1
+#MUL CurrentMeasureMul FirstMeasureMul SecondMeasureMul\
+#MUL CurrentMeasureValue FirstMeasureMul MeasureResultRegNVnode1
+#ADD TotalMeasureMul CurrentMeasureValue TotalMeasureMul
+#ST CurrentMeasureValue MeasureValuePerMeasure
+LABEL Stop
+#print after stop
+
+ADDi MeasureStartReg 1
+printer MeasureStartReg
+ST SuccesReg SuccesRegPerMeasure
+LDi 0 SuccesReg
+BR MeasureStartReg < MeasureAmountReg Lab1
+ST SuccesCountReg MemoryCount
+ST sweepAngleReg MemoryAngle
+ST TotalMeasureMul XLMeasureValue
+ADD sweepAngleReg sweepAngleReg SweepStepReg
+#print check
+#printer SuccesCountReg
+#printer TotalMeasureMul
+
+LDi 0 MeasureStartReg
+LDi 0 SuccesCountReg
+LDi 0 TotalMeasureMul
+printer sweepAngleReg
+BR sweepAngleReg < SweepStopReg Lab1
+JUMP ActuallyDone
+
+
+
+LABEL SecondCheck
+BR TotalMeasure < -1 SecondCheckGood
+
+LABEL SecondCircuit
+#print after SecondCircuit
+# interprint
+###
+init_real q0
+init_real q1
+# GHZ_setter_2N NVnode2 NVnode3
+### cz implementation on NVnode0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 3.14 q0
+QgateCC [1,0,0] 3.14 0 q0
+QgateCC [0,1,0] 3.14 0 q0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 1.57 q0
+
+QgateCC [1,0,0] 3.14 1 q0
+QgateCC [0,1,0] 3.14 1 q0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 1.57 q0
+
+QgateE [0,1,0] 1.57 q0
+QgateE [1,0,0] 3.14 q0
+### cz implementation on NVnode1
+
+
+QgateE [1,0,0] 3.14 q1
+QgateCC [1,0,0] 3.14 0 q1
+QgateCC [0,1,0] 3.14 0 q1
+QgateE [1,0,0] -1.57 q1
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 1.57 q1
+
+QgateE [0,1,0] 1.57 q1
+QgateE [1,0,0] 3.14 q1
+measure_real q0
+measure_real q1
+wait 1 q0
+wait 1 q1
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
+BR MeasureResultRegNVnode0 < 0 Stop
+JUMP YCount
+LABEL ActuallyDone
+ST MeasureAmountReg MeasureAmountMemoryValue

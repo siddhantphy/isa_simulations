@@ -1,0 +1,149 @@
+#preset registers
+LDi 1.57 sweepAngleReg
+LDi 0 SweepStepReg
+LDi 0 SweepStopReg
+LDi 1 MeasureAmountReg
+LDi 0 MeasureStartReg
+LDi 0 SuccesCountReg
+LDi 0 TotalMeasureMul
+LDi 0 SuccesReg
+
+#start the loop
+LABEL lab1
+Initialize q0
+Initialize q1
+SwapEC q0 0 
+SwapEC q1 0 
+Initialize q0
+Initialize q1
+SwapEC q0 1 
+SwapEC q1 1
+Initialize q0
+Initialize q1
+SwapEC q0 2 
+SwapEC q1 2 
+Initialize q0
+Initialize q1
+SwapEC q0 3 
+SwapEC q1 3 
+Initialize q0
+Initialize q1
+
+QgateUC q0 2 0 sweepAngleReg 0 
+#QgateUC q1 0 1.57 1.57 0 
+QgateUC q0 3 0 sweepAngleReg 0
+#QgateUC q1 1 1.57 4.71 0
+#qgatez q0 2 1.57
+#qgatez q0 3 1.57
+
+init_real q0
+init_real q1
+
+
+#hadamard on elecrons
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+# control not gates on carbon 2
+QgateCC q0 1 0 3.14
+QgateCC q1 1 0 3.14 
+QgateZ q0 0 1.57
+QgateZ q1 0 1.57
+SwapEC q0 0
+QgateZ q0 1 4.71
+SwapEC q1 0 
+QgateZ q1 1 4.71
+
+NVentangle_magic NVnode0 NVnode1
+QgateE q0 0 3.14 
+
+#hadamard on the electron
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# hadamard on the carbon
+qgateuc q0 0 1.5707963267949 1.5707963267949 1
+qgateuc q0 0 0.0 3.1415926535898 1
+
+#controlled x rotation on the carbon
+qgatecc q0 0 0.0 3.1415926535898
+qgatez q0 0 1.57
+#hadamard on the electron
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# hadamard on the carbon
+qgateuc q0 0 1.5707963267949 1.5707963267949 1
+qgateuc q0 0 0.0 3.1415926535898 1
+
+#hadamard on the electron
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+# hadamard on the carbon
+qgateuc q1 0 1.5707963267949 1.5707963267949 1
+qgateuc q1 0 0.0 3.1415926535898 1
+
+#controlled x rotation on the carbon
+qgatecc q1 0 0.0 3.1415926535898
+qgatez q1 0 1.57
+#hadamard on the electron
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+#correction on the electron (Z pi/2 rotation)
+#qgatez q1 0 1.57 
+
+# hadamard on the carbon
+qgateuc q1 0 1.5707963267949 1.5707963267949 1
+qgateuc q1 0 0.0 3.1415926535898 1
+measure q0
+measure q1
+full_swap q0 0
+#qgatez q0 0 3.14
+full_swap q1 0
+
+#state_inject_ghz_2 NVnode0 Nvnode1 3 3
+#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4
+
+#controlled x rotation on the carbon D1
+qgatecc q0 2 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+#controlled x rotation on the carbon D2
+qgatecc q1 2 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+full_swap q0 0
+#qgatez q0 0 3.14
+full_swap q1 0
+
+full_swap q0 1
+#qgatez q0 0 3.14
+full_swap q1 1
+
+#controlled x rotation on the carbon D3
+qgatecc q0 3 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+#controlled x rotation on the carbon D4
+qgatecc q1 3 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+measure q0
+measure q1
+
+swapce q0 X 0 
+swapce q1 X 0 
+
+measure q0
+measure q1
+
+statestore

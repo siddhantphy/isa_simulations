@@ -1,0 +1,79 @@
+
+LDi 0 measureCounter
+LDi 100 MeasureAmount
+LABEL start
+#initialisation of electrons
+Initialize q0 
+Initialize q1 
+Initialize q2
+Initialize q3
+
+
+#entangling of electrons
+NVentangle NVnode0 NVnode1
+# X gate to get correct bell satte
+# swapping entanglement to carbon
+MemSwap 0 q0
+MemSwap 0 q1
+
+Initialize q0
+Initialize q1
+
+NVentangle NVnode2 NVnode3
+MemSwap 0 q2
+MemSwap 0 q3
+Initialize q2
+Initialize q3
+
+NVentangle NVnode0 NVnode2
+
+# hadamard on the carbon NVnode0
+QgateUC [0,1,0] 1.57 0 1 q0
+QgateUC [1,0,0] 3.14 0 1 q0
+
+# cx on carbon NVnode0
+QgateCC [1,0,0] 3.14 0 q0
+
+# hadamard on the carbon NVnode0
+QgateUC [0,1,0] 1.57 0 1 q0
+QgateUC [1,0,0] 3.14 0 1 q0
+
+# hadamard on the carbon NVnode2
+QgateUC [0,1,0] 1.57 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q2
+
+# cx on carbon NVnode2
+QgateCC [1,0,0] 3.14 0 q2
+
+# hadamard on the carbon NVnode2
+QgateUC [0,1,0] 1.57 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q2
+
+# hadamard on the electron NVnode0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 3.14 q0
+
+# hadamard on the electron NVnode0
+QgateE [1,0,0] -1.57 q2
+QgateE [0,1,0] 3.14 q2
+
+Measure q0
+Measure q2
+wait 1 q0
+wait 1 q2
+
+
+
+MUL result MeasureResultRegNVnode0 MeasureResultRegNVnode2
+BR 0 < result Stop
+QgateUC [1,0,0] 3.14 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q3
+Measure q2
+Measure q3
+
+
+LABEL Stop
+ADDi measureCounter 1
+printer measureCounter
+statestore modicum
+BR measureCounter < MeasureAmount start

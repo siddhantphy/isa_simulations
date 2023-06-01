@@ -1,0 +1,5 @@
+init NVnode0
+init_real NVnode0
+QgateE [0,1,0] 0.785 NVnode0
+QgateE [0,1,0] 0.785 NVnode0
+#wait 100 NVnode0

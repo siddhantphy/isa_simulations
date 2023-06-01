@@ -1,0 +1,7 @@
+initialize q0
+swapec q0 0
+initialize q0
+qgatee q0 1.57 1.57 
+qgatecc q0 0 0 3.14
+qgatez q0 1 1.57
+qgatecc q0 0 1.57 1.57 1

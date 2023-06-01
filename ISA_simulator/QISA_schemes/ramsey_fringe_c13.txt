@@ -1,0 +1,22 @@
+LDi 0 starttime
+LDi 500 steptime
+LDi 50000 stoptime
+LDi 0 measureCounter
+LDi 1000 MeasureAmount
+LABEL start
+init q0
+init_real q0
+swapec q0 0
+QgateUC q0 0 0 1.57 0
+#init_real q0
+wait q0 starttime 
+QgateUC q0 0 3.14 1.57 0
+measure_carbon q0 z 0 
+measure_real q0
+ST MeasureResultRegNVnode0 MeasureValueMem
+ADDi measureCounter 1
+BR measureCounter < MeasureAmount start
+ADD starttime starttime steptime
+LDi 0 measureCounter
+printer starttime
+BR starttime < stoptime start

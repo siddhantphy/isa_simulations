@@ -1,0 +1,8 @@
+init_real q0
+swapec q0 0
+QgateUC q0 0 1.57 1.57 0
+QgateUC q0 0 0 3.14 0
+#wait q0 0
+#QgateUC q0 0 3.14 1.57 0
+#measure_carbon q0 z 0 
+#measure_real q0

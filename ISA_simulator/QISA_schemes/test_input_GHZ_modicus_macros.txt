@@ -1,0 +1,115 @@
+#initialisation of electrons
+LDi 0 measureCounter
+LDi 100 MeasureAmount
+LABEL start
+Initialize q0 
+Initialize q1 
+Initialize q2
+Initialize q3
+
+#entangling of electrons
+NVentangle NVnode0 NVnode1
+# X gate to get correct bell satte
+# swapping entanglement to carbon
+MemSwap 0 q0
+MemSwap 0 q1
+
+NVentangle NVnode2 NVnode3
+MemSwap 0 q2
+MemSwap 0 q3
+Initialize q0
+Initialize q1
+Initialize q2
+Initialize q3
+NVentangle NVnode0 NVnode2
+
+# hadamard on the carbon NVnode0
+QgateUC [0,1,0] 1.57 0 1 q0
+QgateUC [1,0,0] 3.14 0 1 q0
+
+# cx on carbon NVnode0
+QgateCC [1,0,0] 3.14 0 q0
+
+# hadamard on the carbon NVnode0
+QgateUC [0,1,0] 1.57 0 1 q0
+QgateUC [1,0,0] 3.14 0 1 q0
+
+
+# hadamard on the carbon NVnode2
+QgateUC [0,1,0] 1.57 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q2
+
+# cx on carbon NVnode2
+QgateCC [1,0,0] 3.14 0 q2
+
+# hadamard on the carbon NVnode2
+QgateUC [0,1,0] 1.57 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q2
+
+# hadamard on the electron NVnode 0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 3.14 q0
+
+# hadamard on the electron NVnode2
+QgateE [1,0,0] -1.57 q2
+QgateE [0,1,0] 3.14 q2
+
+
+
+NVentangle NVnode1 NVnode3
+
+# hadamard on the carbon NVnode1
+QgateUC [0,1,0] 1.57 0 1 q1
+QgateUC [1,0,0] 3.14 0 1 q1
+
+# cx on carbon NVnode1
+QgateCC [1,0,0] 3.14 0 q1
+
+# hadamard on the carbon NVnode1
+QgateUC [0,1,0] 1.57 0 1 q1
+QgateUC [1,0,0] 3.14 0 1 q1
+
+# hadamard on the carbon NVnode3
+QgateUC [0,1,0] 1.57 0 1 q3
+QgateUC [1,0,0] 3.14 0 1 q3
+
+# cx on carbon NVnode3
+QgateCC [1,0,0] 3.14 0 q3
+
+# hadamard on the carbon NVnode3
+QgateUC [0,1,0] 1.57 0 1 q3
+QgateUC [1,0,0] 3.14 0 1 q3
+
+# hadamard on the electron NVnode1
+QgateE [1,0,0] -1.57 q1
+QgateE [0,1,0] 3.14 q1
+
+# hadamard on the electron NVnode3
+QgateE [1,0,0] -1.57 q3
+QgateE [0,1,0] 3.14 q3
+
+Measure q0
+Measure q2
+Measure q1
+Measure q3
+
+wait 1 q1
+wait 1 q0
+wait 1 q2
+wait 1 q3
+
+MUL result1 MeasureResultRegNVnode1 MeasureResultRegNVnode3
+MUL result2 MeasureResultRegNVnode0 MeasureResultRegNVnode2
+MUL result3 result1 result2
+BR result3 < 0 start
+BR 0 < result2 Stop
+QgateUC [1,0,0] 3.14 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q3
+Measure q2
+Measure q3
+
+LABEL Stop
+ADDi measureCounter 1
+printer measureCounter
+statestore modicus
+BR measureCounter < MeasureAmount start

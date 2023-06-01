@@ -1,0 +1,129 @@
+#initialisation of electrons
+init q0 
+init_real q0
+init q1 
+init_real q1
+init q2
+init_real q2
+init q3
+init_real q3
+#entangling of electrons
+LDi 0 measureCounter
+LDi 1000 MeasureAmount
+LABEL start
+GHZ_setter_2N NVnode0 NVnode1
+# X gate to get correct bell satte
+# swapping entanglement to carbon
+full_swap 0 q0
+full_swap 0 q1
+
+GHZ_setter_2N NVnode2 NVnode3
+full_swap 0 q2
+full_swap 0 q3
+init_real q0
+init_real q1
+init_real q2
+init_real q3
+GHZ_setter_2N NVnode0 NVnode2
+
+# hadamard on the electron NVnode0
+#QgateE [0,1,0] 1.57 q0
+#QgateE [1,0,0] 3.14 q0
+
+# hadamard on the carbon NVnode0
+#QgateUC [0,1,0] 1.57 0 1 q0
+#QgateUC [1,0,0] 3.14 0 1 q0
+
+# cx on carbon NVnode0
+QgateCC [1,0,0] 3.14 0 q0
+QgateCC [0,1,0] 3.14 0 q0
+
+# hadamard on the carbon NVnode0
+#QgateUC [0,1,0] 1.57 0 1 q0
+#QgateUC [1,0,0] 3.14 0 1 q0
+
+# hadamard on the electron NVnode2
+#QgateE [0,1,0] 1.57 q2
+#QgateE [1,0,0] 3.14 q2
+
+# hadamard on the carbon NVnode2
+#QgateUC [0,1,0] 1.57 0 1 q2
+#QgateUC [1,0,0] 3.14 0 1 q2
+
+# cx on carbon NVnode2
+QgateCC [1,0,0] 3.14 0 q2
+QgateCC [0,1,0] 3.14 0 q2
+
+# hadamard on the carbon NVnode2
+#QgateUC [0,1,0] 1.57 0 1 q2
+#QgateUC [1,0,0] 3.14 0 1 q2
+
+# hadamard on the electron NVnode0
+QgateE [1,0,0] -1.57 q0
+QgateE [0,1,0] 3.14 q0
+
+# hadamard on the electron NVnode2
+QgateE [1,0,0] -1.57 q2
+QgateE [0,1,0] 3.14 q2
+
+measure_real q0
+measure_real q2
+
+GHZ_setter_2N NVnode1 NVnode3
+
+# hadamard on the carbon NVnode1
+#QgateUC [0,1,0] 1.57 0 1 q1
+#QgateUC [1,0,0] 3.14 0 1 q1
+
+# cx on carbon NVnode1
+QgateCC [1,0,0] 3.14 0 q1
+QgateCC [0,1,0] 3.14 0 q1
+
+# hadamard on the carbon NVnode1
+#QgateUC [0,1,0] 1.57 0 1 q1
+#QgateUC [1,0,0] 3.14 0 1 q1
+
+# hadamard on the carbon NVnode3
+#QgateUC [0,1,0] 1.57 0 1 q3
+#QgateUC [1,0,0] 3.14 0 1 q3
+
+# cx on carbon NVnode3
+QgateCC [1,0,0] 3.14 0 q3
+QgateCC [0,1,0] 3.14 0 q3
+
+# hadamard on the carbon NVnode3
+#QgateUC [0,1,0] 1.57 0 1 q3
+#QgateUC [1,0,0] 3.14 0 1 q3
+
+# hadamard on the electron NVnode0
+QgateE [1,0,0] -1.57 q1
+QgateE [0,1,0] 3.14 q1
+
+# hadamard on the electron NVnode0
+QgateE [1,0,0] -1.57 q3
+QgateE [0,1,0] 3.14 q3
+
+
+measure_real q1
+measure_real q3
+
+wait 1 q1
+wait 1 q0
+wait 1 q2
+wait 1 q3
+
+MUL result1 MeasureResultRegNVnode1 MeasureResultRegNVnode3
+MUL result2 MeasureResultRegNVnode0 MeasureResultRegNVnode2
+MUL result3 result1 result2
+BR result3 < 0 start
+BR 0 < result2 Stop
+QgateUC [1,0,0] 3.14 0 1 q2
+QgateUC [1,0,0] 3.14 0 1 q3
+measure_real q2
+measure_real q3
+
+LABEL Stop
+ADDi measureCounter 1
+printer measureCounter
+statestore modicus
+BR measureCounter < MeasureAmount start

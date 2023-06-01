@@ -1,0 +1,3 @@
+init q0
+init_real q0
+magnetic_bias 1600000000 2000000 1850000000 NVnode0

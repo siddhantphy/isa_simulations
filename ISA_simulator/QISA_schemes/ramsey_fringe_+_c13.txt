@@ -1,0 +1,20 @@
+LDi 0 measureCounter
+LDi 1000 MeasureAmount
+LABEL start
+init_real q0
+swapec q0 0
+#wait q0 10
+QgateUC q0 0 0 1.57 0
+init_real q0
+QgateE q0 0 1.57 
+#wait q0 100
+QgateUC q0 0 3.14 1.57 0
+swapce q0 z 0 
+measure q0
+#printer MeasureResultRegNVnode0
+ST MeasureResultRegNVnode0 MeasureValueMem
+ADDi measureCounter 1
+#printer measureCounter
+BR measureCounter < MeasureAmount start
+
+

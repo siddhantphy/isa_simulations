@@ -1,0 +1,26 @@
+initialize q0
+swapec q0 0
+initialize q0
+
+#hadamard on the electron
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# hadamard on the carbon
+qgateuc q0 0 1.5707963267949 1.5707963267949 1
+qgateuc q0 0 0.0 3.1415926535898 1
+
+#controlled x rotation on the carbon
+qgatecc q0 0 0.0 3.1415926535898
+qgatez q0 0 1.57
+#hadamard on the electron
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+#correction on the electron (Z pi/2 rotation)
+#QgateE q0 3.14 1.57 
+#QgateE q0 1.57 1.57 
+#QgateE q0 0 1.57 
+
+# hadamard on the carbon
+qgateuc q0 0 1.5707963267949 1.5707963267949 1
+qgateuc q0 0 0.0 3.1415926535898 1

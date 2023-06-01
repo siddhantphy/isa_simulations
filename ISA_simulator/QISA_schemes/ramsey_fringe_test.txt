@@ -1,0 +1,9 @@
+init q0
+init_real q0
+swapec q0 0
+QgateUC q0 0 0 1.57 0
+wait q0 14604
+QgateUC q0 0 3.14 1.57 0
+init_real q0
+swapce q0 Z 0 
+#measure_real q0

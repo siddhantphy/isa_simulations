@@ -1,0 +1,11 @@
+#set threshold value
+LDi 3 R0
+
+#reset photonregister
+LDi 0 PhotonRegister
+# Turn on measurement laser
+switch measure
+wait time
+switch measure
+BR PhotonRegister > R0, ResultReg
+SendData ResultReg

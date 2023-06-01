@@ -1,0 +1,2 @@
+init q0
+init_real q0
