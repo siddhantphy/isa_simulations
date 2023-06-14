@@ -1,5 +1,5 @@
 #preset registers
-LDi 1.57 sweepAngleReg
+LDi 0 sweepAngleReg
 LDi 0 SweepStepReg
 LDi 0 SweepStopReg
 LDi 1 MeasureAmountReg
@@ -9,7 +9,7 @@ LDi 0 TotalMeasureMul
 LDi 0 SuccesReg
 
 #start the loop
-LABEL lab1
+LABEL start
 Initialize q0
 Initialize q1
 SwapEC q0 0 
@@ -29,9 +29,9 @@ SwapEC q1 3
 Initialize q0
 Initialize q1
 
-QgateUC q0 2 0 sweepAngleReg 0 
+#QgateUC q0 2 0 sweepAngleReg 0 
 #QgateUC q1 0 1.57 1.57 0 
-QgateUC q0 3 0 sweepAngleReg 0
+#QgateUC q0 3 0 sweepAngleReg 0
 #QgateUC q1 1 1.57 4.71 0
 #qgatez q0 2 1.57
 #qgatez q0 3 1.57
@@ -100,12 +100,15 @@ qgateuc q1 0 1.5707963267949 1.5707963267949 1
 qgateuc q1 0 0.0 3.1415926535898 1
 measure q0
 measure q1
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasureOne < 0 start
+
 full_swap q0 0
 #qgatez q0 0 3.14
 full_swap q1 0
 
 #state_inject_ghz_2 NVnode0 Nvnode1 3 3
-#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4
+state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface 0 0
 
 #controlled x rotation on the carbon D1
 qgatecc q0 2 0.0 3.1415926535898
@@ -139,11 +142,15 @@ qgatee q1 0.0 3.1415926535898
 
 measure q0
 measure q1
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 
 swapce q0 X 0 
 swapce q1 X 0 
 
 measure q0
 measure q1
+MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
+MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
+BR TotalMeasure < 0 start
 
-statestore
+statestore surface 0 0
