@@ -9,7 +9,7 @@ LDi 0 TotalMeasureMul
 LDi 0 SuccesReg
 
 #start the loop
-LABEL lab1
+LABEL start
 Initialize q0
 Initialize q1
 SwapEC q0 0 
@@ -38,7 +38,6 @@ QgateUC q0 1 1.57 1.57 0
 
 init_real q0
 init_real q1
-
 
 NVentangle_magic NVnode0 NVnode1
 QgateE q0 0 3.14 
@@ -79,7 +78,10 @@ full_swap_own q0 1
 qgatee q0 1.5707963267949 1.5707963267949
 qgatee q0 0.0 3.1415926535898
 measure q0
-#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4
+
+#perform the check for the first measurement
+BR MeasureResultRegNVnode0 < 0 start
+state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface 0 0
 full_swap_own q0 1
 full_swap_own q1 0
 
@@ -111,11 +113,21 @@ qgatee q1 0.0 3.1415926535898
 
 measure q0
 measure q1
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 
 swapce q0 X 0 
 swapce q1 X 0 
 
 measure q0
 measure q1
+MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
+MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
+#BR TotalMeasureTwo < 0 start
+BR TotalMeasure < 0 start
+print states
+printer TotalMeasureOne
+printer TotalMeasureTwo
+printer TotalMeasure
 
 statestore surface 0 0
+LABEL stop
