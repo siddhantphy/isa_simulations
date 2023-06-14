@@ -962,8 +962,6 @@ class Loc_Cont_Protocol(Protocol):
 			elif message[0] == "memswap_electron_to_carbon" or message[0] == "swapec":
 	
 				message_send.append(["excite_mw","0", np.pi/self.controller.elec_rabi_reg[0]/2, self.controller.elec_freq_reg[0], 1.57, 400e-6])
-				print(int(message[1]))
-				print(self.controller.carbon_frequencies[int(message[1])])
 				message_send.append(["excite_mw","0", np.pi/self.controller.carbon_rabi_frequencies[0]/2, self.controller.carbon_frequencies[int(message[1])],3.14,400e-6])
 				message_send.append(["excite_mw","0", np.pi/self.controller.elec_rabi_reg[0], self.controller.elec_freq_reg[0], 0, 400e-6])
 				message_send.append(["excite_mw","0", np.pi/self.controller.carbon_rabi_frequencies[0]/2, self.controller.carbon_frequencies[int(message[1])],0,400e-6])
