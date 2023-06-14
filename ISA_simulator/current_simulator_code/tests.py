@@ -52,7 +52,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		filename = 'Surface-7-logical_X_postselect_2.txt'
 		filename = 'Surface-7-logical_X_postselect_copy - Copy.txt'
 		filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
-		filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
+		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
 		
   
 		# filename = 'ramsey_fringe_+_c13.txt'
