@@ -77,7 +77,7 @@ class Microwave_generator(Component):
 		
 
 class Local_controller(Component):
-	def __init__(self, name, node, no_z_precission, decay,  port_names=None, photon_detection_probability = 1, absorption_probability = 1, photon_emission_noise = False, detuning = 0,single_instruction = True, frame = "rotating", wait_detuning = 1,clk_local = 0):
+	def __init__(self, name, node, no_z_precission, decay,  port_names=None, photon_detection_probability = 1, absorption_probability = 1, photon_emission_noise = False, detuning = 0,single_instruction = True, frame = "rotating", wait_detuning = 1,clk_local = 0, Dipole_moment = None,rotation_with_pi=1):
 		super().__init__(name=name, port_names=port_names)
 		self.Registers = [0] *33
 		self.PhotonRegisters = [0]
@@ -125,7 +125,7 @@ class Local_controller(Component):
 		self.memAddr_time = []
 
 		#start the protocol which is connected to the local controller, thus giving it a functionality. The other protocols for the other components are added as subprotocols of the local controller
-		self.loc_cont_prot = Loc_Cont_Protocol(controller = self, node = node, photon_detection_probability=photon_detection_probability, absorption_probability = absorption_probability, no_z_precission = no_z_precission, decay = decay, photon_emission_noise = photon_emission_noise, detuning = detuning,single_instruction = single_instruction, frame = frame, wait_detuning=wait_detuning)
+		self.loc_cont_prot = Loc_Cont_Protocol(controller = self, node = node, photon_detection_probability=photon_detection_probability, absorption_probability = absorption_probability, no_z_precission = no_z_precission, decay = decay, photon_emission_noise = photon_emission_noise, detuning = detuning,single_instruction = single_instruction, frame = frame, wait_detuning=wait_detuning,Dipole_moment=Dipole_moment,rotation_with_pi=rotation_with_pi)
 		self.loc_cont_prot.start()
 
 class Lasers(Component):
@@ -142,7 +142,7 @@ class VoltageSource(Component):
 		self.voltage = voltage
 
 class ExternalMagnet(Component):
-	def __init__(self, name, magnetic_field = 40e-3):
+	def __init__(self, name, magnetic_field = 0.1089):
 		super().__init__(name = name, port_names = ["In_magnet"])
 		self.parameters = {"magnetic_field":magnetic_field}
 	

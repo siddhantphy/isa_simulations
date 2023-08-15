@@ -15,7 +15,34 @@ from netsquid.components.qprogram import *
 from netsquid.components.models.qerrormodels import *
 
 # set_qstate_formalism(QFormalism.DM)
+import h5py
+filename = "../experimentalist_data/integrated_ssro.hdf5"
 
+with h5py.File(filename, "r") as f:
+    # Print all root level object names (aka keys) 
+    # these can be group or dataset names 
+    print("Keys: %s" % f.keys())
+    # get first object name/key; may or may NOT be a group
+    a_group_key = list(f.keys())[0]
+
+    # get the object type for a_group_key: usually group or dataset
+    print(f[a_group_key][1])
+    print(len(f[a_group_key]))
+    print(f['x0'][0:96])
+    print(f['y0'][0:96])
+    
+    
+
+    # If a_group_key is a group name, 
+    # this gets the object names in the group and returns as a list
+    data = list(f[a_group_key])
+
+    # If a_group_key is a dataset name, 
+    # this gets the dataset values and returns as a list
+    data = list(f[a_group_key])
+    # preferred methods to get dataset values:
+    ds_obj = f[a_group_key]      # returns as a h5py dataset object
+    ds_arr = f[a_group_key][()]  # returns as a numpy array
 # q1, q2, q3, q4 = create_qubits(num_qubits = 4)
 # # assign_qstate(q2, np.diag([0.5,0.5]))
 # # assign_qstate(q1, np.diag([0.5,0.5]))
@@ -119,15 +146,15 @@ from netsquid.components.models.qerrormodels import *
 # # print(qproc.qmemory.peek(0)[0].qstate.qrepr)
 # qproc.execute_program(prog1, qubit_mapping=[1, 3])
 # ns.sim_run()
-# print(prog1.output) 
-# # print(q1.qstate.qrepr,q2.qstate.qrepr)
-# with open('test_input.txt') as f:
-#     lines = f.readlines()
+# # print(prog1.output) 
+# # # print(q1.qstate.qrepr,q2.qstate.qrepr)
+# # with open('test_input.txt') as f:
+# #     lines = f.readlines()
 
-import matplotlib.pyplot as plt
-import json
-import numpy as np
-from scipy.optimize import curve_fit
+# import matplotlib.pyplot as plt
+# import json
+# import numpy as np
+# from scipy.optimize import curve_fit
 # reading = lines[0].split()
 # reading_2 = lines[2].split()
 # print(reading[1][1:])
@@ -135,55 +162,53 @@ from scipy.optimize import curve_fit
 # print(reading_2[0],reading_2[1])
 # tmodel = T1T2NoiseModel()
 # print(dir(tmodel._random_dephasing_noise))
-from numpy import exp, pi, sqrt
-from lmfit import Model
-with open('magnetic_bias_store_1peak_10000_real.json', 'r') as f:
-    data = json.load(f)
+# from numpy import exp, pi, sqrt
 
 
-import math
 
-# print(data)
-def objective(x, a, b, c, d, e, f):
-	return (a * x) + (b * x**2) + (c * x**3) + (d * x**4) + (e * x**5) + f
+# import math
+
+# # print(data)
+# def objective(x, a, b, c, d, e, f):
+# 	return (a * x) + (b * x**2) + (c * x**3) + (d * x**4) + (e * x**5) + f
+
+# # def gaussian(x, amp, cen, wid):
+# #     """1-d gaussian: gaussian(x, amp, cen, wid)"""
+# #     return (amp / (sqrt(2*pi) * wid)) * exp(-(x-cen)**2 / (2*wid**2))
 
 # def gaussian(x, amp, cen, wid):
-#     """1-d gaussian: gaussian(x, amp, cen, wid)"""
-#     return (amp / (sqrt(2*pi) * wid)) * exp(-(x-cen)**2 / (2*wid**2))
-
-def gaussian(x, amp, cen, wid):
-    return amp * exp(-(x-cen)**2 / wid)
-# gmodel = Model(gaussian)
-def gaus(x,H,A,x0,sigma):
-    return H+A*np.exp(-(x-x0)**2/(2*sigma**2))
-# pars = gmodel.make_params(amp = 5, cen = 5, wid =1)
-# init_vals = [1,0,1]
-y = data["photon count"]
-x = data["frequency"]
-x = np.array(x)
-n = len(x)
-mean = sum(x*y)/sum(y)
-sigma = sqrt(sum(y*(x-mean)**2)/sum(y))
-popt,covar = curve_fit(gaus, x,y, p0 = [min(y),max(y),mean,sigma])
-# result = gmodel.fit(y,pars,x=x)
-# print(result.fit_report())
-yerr = []
-for i in range(len(y)):
-    yerr.append(math.erfc(x[i]))
-# popt, _ = curve_fit(objective,x,y)
-# a,b,c,d,e,f = popt
-# x_line = np.arange(min(x),max(x),1)
-# y_line = gaussian(x_line, best_vals)
-# print(x,y)
-# theta = np.polyfit(x,y,2)
-# y_line = theta[2] + theta[1] * pow(x,1)+theta[0]*pow(x,2)
-plt.plot(x,y,'.', label = "original_data")
-plt.ylabel("Photon count")
-plt.xlabel("Frequency")
-plt.title("The photon count versus the frequency")
-# plt.errorbar(x,y,yerr = yerr, label = 'error bars')
-plt.plot(x,gaus(x,*popt),'--', color = "red", label = "fitted data")
-plt.legend()
-plt.savefig("first_test")
-# optimizedParameters,pcov = opt.curve_fit()
+#     return amp * exp(-(x-cen)**2 / wid)
+# # gmodel = Model(gaussian)
+# def gaus(x,H,A,x0,sigma):
+#     return H+A*np.exp(-(x-x0)**2/(2*sigma**2))
+# # pars = gmodel.make_params(amp = 5, cen = 5, wid =1)
+# # init_vals = [1,0,1]
+# y = data["photon count"]
+# x = data["frequency"]
+# x = np.array(x)
+# n = len(x)
+# mean = sum(x*y)/sum(y)
+# sigma = sqrt(sum(y*(x-mean)**2)/sum(y))
+# popt,covar = curve_fit(gaus, x,y, p0 = [min(y),max(y),mean,sigma])
+# # result = gmodel.fit(y,pars,x=x)
+# # print(result.fit_report())
+# yerr = []
+# for i in range(len(y)):
+#     yerr.append(math.erfc(x[i]))
+# # popt, _ = curve_fit(objective,x,y)
+# # a,b,c,d,e,f = popt
+# # x_line = np.arange(min(x),max(x),1)
+# # y_line = gaussian(x_line, best_vals)
+# # print(x,y)
+# # theta = np.polyfit(x,y,2)
+# # y_line = theta[2] + theta[1] * pow(x,1)+theta[0]*pow(x,2)
+# plt.plot(x,y,'.', label = "original_data")
+# plt.ylabel("Photon count")
+# plt.xlabel("Frequency")
+# plt.title("The photon count versus the frequency")
+# # plt.errorbar(x,y,yerr = yerr, label = 'error bars')
+# plt.plot(x,gaus(x,*popt),'--', color = "red", label = "fitted data")
+# plt.legend()
+# plt.savefig("first_test")
+# # optimizedParameters,pcov = opt.curve_fit()
 

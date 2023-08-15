@@ -2,6 +2,7 @@ from logging import raiseExceptions
 import netsquid as ns
 from netsquid.protocols import  Protocol, Signals
 import numpy as np
+import math
 from math import pi
 from netsquid.qubits.qubitapi import *
 from NVPrograms import Programs_microwave
@@ -122,18 +123,18 @@ class Global_cont_Protocol(Protocol):
 					# Deliver the sampled states
 					delivery = distributor.add_delivery(memory_positions=memory_positions, alpha=0.00000001, cycle_time=0.0001, **other_parameters)
 					evt_expr = EventExpression(event_id = delivery.any_id) # Get event id, for scheduling purposes
-					print(distributor.get_label(delivery))
+					# print(distributor.get_label(delivery))
 					yield evt_expr # Wait for the event expression to be done in order to get the next instruction
 					yield self.await_timer(1)
-					print(distributor._last_label[1])
+					# print(distributor._last_label[1])
 					if str(distributor._last_label[1]) == "BellIndex.B11":
 						counter +=1
-						print("this is not correct")
+						# print("this is not correct")
 					else:
 						process_done = True
-						print('this is correct')
-				print('within nventangle magic')
-				print(f"the counter value is {counter}")
+						# print('this is correct')
+				# print('within nventangle magic')
+				# print(f"the counter value is {counter}")
 				
 			
 			elif items[0] == "printstate":
@@ -181,10 +182,10 @@ class Global_cont_Protocol(Protocol):
 				qubits = []
 
 				# Add electrons of the nodes to the list
-				print(items[3])
+				# print(items[3])
 				qubits.append(Nodes[0].qmemory.peek(int(items[3]))[0])
-				qubits.append(Nodes[0].qmemory.peek(int(items[4]))[0])
 				qubits.append(Nodes[1].qmemory.peek(int(items[5]))[0])
+				qubits.append(Nodes[0].qmemory.peek(int(items[4]))[0])
 				qubits.append(Nodes[1].qmemory.peek(int(items[6]))[0])
 				# for items_node in Nodes:
 				# 	qubits.append(items_node.qmemory.peek(items[3])[0])
@@ -199,15 +200,15 @@ class Global_cont_Protocol(Protocol):
 				electron_GHZ = np.array([checker,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,zeroline,checker])
 				electron_GHZ_nogo = np.array([checker_no,zeroline,zeroline,checker_no_2])
 				if items[7] == 'surface':
-					rotation_angle = float(items[8])
-					rotation_phase = float(items[9])
+					rotation_angle = float(items[8]) if items[8][0].isdigit() else self.controller.register_dict[items[8]]
+					rotation_phase = float(items[9]) if items[9][0].isdigit() else self.controller.register_dict[items[9]]
 					cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
 					sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
 					# middle_line = [0]*16
 					# middle_value_line = [0]
 					# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
-					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value]).astype(np.float64)
+					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
 					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
 					q0,q1,q2,q3 = create_qubits(4)
 					assign_qstate(qubits,perfect_state)
@@ -215,6 +216,53 @@ class Global_cont_Protocol(Protocol):
 				# Assign GHZ state to the electrons
 				else:
 					assign_qstate(qubits, electron_GHZ)
+			elif items[0] == "nventangle_real":
+				Nodes = [self.network.get_node(items[1]), self.network.get_node(items[2])]
+				electrons = []
+
+				# Add electrons of the nodes to the list
+				for items_node in Nodes:
+					electrons.append(items_node.qmemory.peek(0)[0])
+				
+				# Make the wanted GHZ state
+				rotation_angle = 0
+				rotation_phase = 0
+				cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
+				sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
+				Zerolist = [0]*2
+				checker = [0.5]+Zerolist+[0.5]
+				checker_no = [0.5]+Zerolist+[-0.5]
+				checker_no_2 = [-0.5]+Zerolist+[0.5]
+				# entangled_state = entangle_create()
+				# def entangle_create():
+				alpha_A = 0
+				alpha_B = 0
+				p_det_A = 0
+				p_det_B = 0
+				p_dc = 0
+				V = 0
+				plusmin = np.random.binomial(1,1)*2-1
+				charge_state_fail = np.random.binomial(1,0)
+				# if charge_state_fail:
+					# entangle_create()
+				# print(f"check plusmin probability {plusmin}")
+				## determine entanglement parameters
+				p00 = alpha_A*alpha_B*(p_det_A+p_det_B+2*p_dc)
+				p01 = alpha_A*(1-alpha_B)*(p_det_A+2*p_dc)
+				p10 = alpha_B*(1-alpha_A)*(p_det_B+2*p_dc)
+				p11 = 2*(1-alpha_A)*(1-alpha_B)*p_dc
+				# p_tot = p00+p01+p10+p11
+				zeroline = [0]*4
+				electron_GHZ = np.array([checker,zeroline,zeroline,checker])
+				# electron_GHZ_real = np.array([[p00,0,0,0],[0,p01, plusmin*np.sqrt(V*p01*p10),0],[0, plusmin*np.sqrt(V*p01*p10),p10,0],[0,0,0,p11]])
+				# electron_GHZ_real = np.multiply(electron_GHZ_real,1/p_tot) #perfect config is alpha 0.5 and 0.5
+				# return electron_GHZ
+
+				# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
+				# perfect_state = np.array([0.5, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
+				# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
+				# print(f"the injected state is {electron_GHZ}")
+				assign_qstate(electrons, electron_GHZ)
     
 			elif items[0] == "ghz_setter_2n" or items[0] == "nventangle":
 				# Get the nodes for which the GHZ states needs to be set
@@ -416,21 +464,27 @@ class Global_cont_Protocol(Protocol):
 				carbon_3 = self.network.get_node("nvnode0").qmemory.peek(4)[0]
 				carbon_4 = self.network.get_node("nvnode1").qmemory.peek(4)[0]
 				if items[1] == 'surface':
-					rotation_angle = float(items[2])
-					rotation_phase = float(items[3])
+					# rotation_angle = float(items[2])
+					# rotation_phase = float(items[3])
+					rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
+					rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
+					
 					cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
 					sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
 					# middle_line = [0]*16
 					# middle_value_line = [0]
 					# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
-					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value]).astype(np.float64)
+					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
 					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
 					q0,q1,q2,q3 = create_qubits(4)
 					assign_qstate([q0,q1,q2,q3],perfect_state)
 					carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
 					self.network.qubit_total += carbon_matrix
+					q4,q5,q6,q7 = create_qubits(4)
+					assign_qstate([q4,q5,q6,q7],carbon_matrix)
 					fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
+					# fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
 					self.controller.register_dict["fidelity"].append(fidelity_value)
 					print(f"the perfect state is {perfect_state}")
 					print(f"the state of the qubit is {q0.qstate.qrepr}")
@@ -529,6 +583,7 @@ class Global_cont_Protocol(Protocol):
 				if items[1][:1] != 'q' and items[1][:-1] != 'nvnode':
 					raise ValueError(f"The last input must give the node to perform the instruction on, fix instruction {items}")
 				offset = len(items[1][:-1])
+				
 				self.clk_flag = 1
 				port_out = self.controller.ports["Out_nvnode"+items[1][offset:]]
 				items.remove(items[1])
@@ -593,13 +648,14 @@ class Beamsplitter_Protocol(Protocol):
 	
 ### Protocol of the diamond, not used in current implementation ###
 class Diamond_Protocol(Protocol):
-	def __init__(self, nv_center, laser_protocol, no_z_precission, detuning, decay = False, single_instruction = True, frame = "rotating"):
+	def __init__(self, nv_center, laser_protocol, no_z_precission, detuning, decay = False, single_instruction = True, frame = "rotating",Dipole_moment = None):
 		super().__init__()
 		self.nv_center = nv_center
 		self.no_z_precission = no_z_precission
 		self.detuning = detuning
 		self.single_instruction = single_instruction
 		self.frame = frame
+		self.Dipole_moment = Dipole_moment
 		self.laser_protocol = laser_protocol
 		self.add_subprotocol(laser_protocol, "laser_protocol")
 
@@ -624,8 +680,9 @@ class Diamond_Protocol(Protocol):
 				yield self.await_program(self.nv_center)
 			if message[0] == "excite_mw":
 				yield self.await_timer(abs(float(items[2])))
+			N_state = self.nv_center.peek(len(self.nv_center.mem_positions)-2)[0]
 			# The quantum program which coincides with the instruction name is retrieved 
-			qprogram = Programs_microwave(items, self.nv_center, no_z = self.no_z_precission, detuning = self.detuning, single_instruction = self.single_instruction, frame = self.frame)
+			qprogram = Programs_microwave(items, self.nv_center, no_z = self.no_z_precission, detuning = self.detuning, single_instruction = self.single_instruction, frame = self.frame, N_state = reduced_dm(N_state),Dipole_moment = self.Dipole_moment)
 
 			# The program is executed
 			self.nv_center.execute_program(qprogram)
@@ -642,13 +699,13 @@ class Diamond_Protocol(Protocol):
 
 # Local controller protocol implementation
 class Loc_Cont_Protocol(Protocol):
-	def __init__(self,controller,node, photon_detection_probability, absorption_probability,no_z_precission, decay, photon_emission_noise, detuning,single_instruction, frame, wait_detuning):
+	def __init__(self,controller,node, photon_detection_probability, absorption_probability,no_z_precission, decay, photon_emission_noise, detuning,single_instruction, frame, wait_detuning,Dipole_moment,rotation_with_pi):
 		super().__init__()
 		self.controller = controller
 		self.node = node
 		self.wait_detuning = wait_detuning
 		self.laser_protocol = Laser_protocol(switches = node.subcomponents["switches"], diamond = node.subcomponents["nv_center_quantum_processor"], absorption_probability= absorption_probability, photon_emission_noise= photon_emission_noise)
-		self.Diamond_protocol = Diamond_Protocol(nv_center = node.subcomponents["nv_center_quantum_processor"], laser_protocol = self.laser_protocol, no_z_precission = no_z_precission, decay = decay, detuning= detuning, single_instruction=single_instruction,frame = frame)
+		self.Diamond_protocol = Diamond_Protocol(nv_center = node.subcomponents["nv_center_quantum_processor"], laser_protocol = self.laser_protocol, no_z_precission = no_z_precission, decay = decay, detuning= detuning, single_instruction=single_instruction,frame = frame, Dipole_moment = Dipole_moment)
 		self.Photo_protocol = PhotodetectorProtocol(photodetector = node.subcomponents["photodetector"], p = photon_detection_probability)
 		self.switch_protocol = SwitchProtocol(switch=node.subcomponents["switches"])
 		self.add_subprotocol(self.switch_protocol, 'switch_protocol')
@@ -657,6 +714,7 @@ class Loc_Cont_Protocol(Protocol):
 		self.controller.tresholdregister[0] = 3
 		self.clk_local = self.controller.clk_local
 		self.clk_cycles = self.controller.clk_cycle_dict
+		self.rotation_with_pi = rotation_with_pi
 
 		# Determine parameters to get the value for the electron resonance frequency
 		self.D = D = 2.87e9  #Hz
@@ -668,7 +726,8 @@ class Loc_Cont_Protocol(Protocol):
 		# Calculate the resonance frequency for the electron
 		self.controller.elec_freq_reg[0] = D - gamma_e*B_z
 		self.controller.elec_rabi_reg[0] = B_osc*gamma_e
-		for k in range(len(self.node.qmemory.mem_positions)-2):
+		omega_L_c = math.copysign(B_z*gamma_c, D-gamma_e*B_z)
+		for k in range(len(self.node.qmemory.mem_positions)-3):
 					# The iterater value skips the value for the electron position
 					iterater_value = k+1
 
@@ -676,11 +735,12 @@ class Loc_Cont_Protocol(Protocol):
 					A_parr_c = self.node.qmemory.mem_positions[iterater_value].properties["A_parr"]
 
 					# Calculate the larmor frequency
-					omega_L_c = B_z*gamma_c
-     
+					# omega_L_c = abs(B_z*gamma_c)
+					
 					# Calculate the rabi frequency and resonance frequencies
 					omega_c = B_osc*gamma_c
-					omega_c_res = omega_L_c-A_parr_c
+					omega_c_res = abs(omega_L_c-A_parr_c)
+					# print(f" omega_c_res = {omega_c_res}")
 
 					# Add the resonance and rabi frequencies to their respective registers
 					self.controller.carbon_frequencies.append(omega_c_res)
@@ -1085,8 +1145,10 @@ class Loc_Cont_Protocol(Protocol):
 			elif message[0] == "qgatee":
 				# Read the input parameters from the message
 				axis = str(message[1])
- 
-				angle = float(message[2])
+				if self.rotation_with_pi == 1:
+					angle = np.pi*float(message[2])
+				else: 
+					angle = float(message[2])
 
 				# Get the value of the oscillating magnetic field
 				B_osc = self.node.subcomponents["microwave"].parameters["B_osc"]
@@ -1104,6 +1166,10 @@ class Loc_Cont_Protocol(Protocol):
 					phase = pi/2*np.sign(new_axis[1]) if new_axis[0] == 0 else np.arctan(new_axis[1]/new_axis[0])
 				# phase = pi/2*np.sign(axis[3]) if float(axis[1]) == 0 else np.arctan(axis[3]/axis[1])
 				else:
+					if self.rotation_with_pi == 1:
+						phase = np.pi*float(axis)
+					else: 
+						phase = float(axis)
 					phase = float(axis)
 				# phase = pi/2*np.sign(int(axis[3])) if float(axis[1]) == 0 else np.arctan(float(axis[3])/float(axis[1]))
 				duration = angle/(self.gamma_e*B_osc)
@@ -1128,9 +1194,16 @@ class Loc_Cont_Protocol(Protocol):
 					phase = pi/2*np.sign(new_axis[1]) if new_axis[0] == 0 else np.arctan(new_axis[1]/new_axis[0])
 				# phase = pi/2*np.sign(axis[3]) if float(axis[1]) == 0 else np.arctan(axis[3]/axis[1])
 				else:
-					phase = float(axis)
-
-				angle = float(message[3])
+					if self.rotation_with_pi == 1:
+						phase = np.pi*float(axis)
+					else: 
+						phase = float(axis)
+					# phase = float(axis)
+				if self.rotation_with_pi == 1:
+					angle = np.pi*float(message[3])
+				else: 
+					angle = float(message[3])
+				
 				carbon_nuclei = int(message[1])
 				direction = int(message[4])
 
@@ -1155,7 +1228,11 @@ class Loc_Cont_Protocol(Protocol):
 			
 			elif message[0] == "qgatez":
 				index_qubit = message[1]
-				phase = message[2]
+				if self.rotation_with_pi == 1:
+					phase = np.pi*float(message[2])
+				else: 
+					phase = float(message[2])
+				# phase = message[2]
 				message_send.append(["numerical_shift", index_qubit, phase])
 				port_out.tx_output(message_send)
     
@@ -1173,10 +1250,17 @@ class Loc_Cont_Protocol(Protocol):
 					# Calculate the corresponding phase and duration parameters for the carbon rotations
 					phase = pi/2*np.sign(new_axis[1]) if new_axis[0] == 0 else np.arctan(new_axis[1]/new_axis[0])
 				else:
-					phase = float(axis)
+					if self.rotation_with_pi == 1:
+						phase = np.pi*float(axis)
+					else: 
+						phase = float(axis)
+					# phase = float(axis)
 				# phase = pi/2*np.sign(float(axis[3])) if float(axis[1]) == 0 else np.arctan(float(axis[3])/float(axis[1]))
-
-				angle = float(message[3])
+				if self.rotation_with_pi == 1:
+					angle = np.pi*float(message[3])
+				else: 
+					angle = float(message[3])
+				# angle = float(message[3])
 				carbon_nuclei = int(message[1])
 
 				# Get the value of the oscillating magnetic field
@@ -1217,11 +1301,18 @@ class Loc_Cont_Protocol(Protocol):
 					# Calculate the corresponding phase and duration parameters for the carbon rotations
 					phase = pi/2*np.sign(new_axis[1]) if new_axis[0] == 0 else np.arctan(new_axis[1]/new_axis[0])
 				else:
-					phase = float(axis)
+					if self.rotation_with_pi == 1:
+						phase = np.pi*float(axis)
+					else: 
+						phase = float(axis)
+					# phase = float(axis)
 				
 				# phase = pi/2*np.sign(float(axis[3])) if float(axis[1]) == 0 else np.arctan(float(axis[3])/float(axis[1]))
-
-				angle = float(message[3])
+				if self.rotation_with_pi == 1:
+					angle = np.pi*float(message[3])
+				else: 
+					angle = float(message[3])
+				# angle = float(message[3])
 				carbon_nuclei = int(message[1])
 				preserved = int(message[4])
 

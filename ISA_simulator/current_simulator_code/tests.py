@@ -12,9 +12,9 @@ import itertools
 import sys # in order to take command line inputs
 from multiprocessing import Pool
 
-set_qstate_formalism(QFormalism.DM)
+# set_qstate_formalism(QFormalism.DM)
 
-def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = True, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0):
+def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = True, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 1):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
@@ -51,11 +51,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		filename = 'Surface-7-logical_X_postselect_copy.txt'
 		filename = 'Surface-7-logical_X_postselect_2.txt'
 		filename = 'Surface-7-logical_X_postselect_copy - Copy.txt'
-		filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
+		# filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
-		
-  
-		# filename = 'ramsey_fringe_+_c13.txt'
+		filename = 'Surface-7_fault_tolerance_1_photonentanglement_multiple_rotations.txt'
+		# filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
+
+		# filename = 'ramsey_fringe_c13.txt'
 		# filename = 'clk_test.txt'
 		# filename = "test_input_surface7_measurereadout_old.txt"
 		# filename = "test_input_surface7_measurereadout_old_phase.txt"
@@ -71,7 +72,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Matti_test.txt"
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
-  
+
 		# filename = "Extra_test.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
@@ -113,7 +114,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 				line_reader.append(lines[i])
 	
 	# Setup the network by calling the network setup function
-	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local)
+	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
 	
 	# Start the global controller functionality and give the global controller its instructions
 	send_protocol = Global_cont_Protocol(network = network, input_prog = line_reader, clk = clk)
@@ -148,17 +149,15 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# matrix_new = reduced_dm(carbon)
  
 	sign_matrix = np.sign(matrix_new)
-	# print(matrix_new)
-	# print(sign_matrix)
-	# # fidelities = network.get_node("controller").register_dict["fidelity"]
-	# print(f"the detuning is {detuning}")
 	
-	# counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
-	# measure_list = network.get_node("controller").memory['MeasureValuePerMeasure'.lower()]
-	# measure_amount = network.get_node("controller").memory['MeasureAmountMemoryValue'.lower()]
-	# Total_succes_count = network.get_node("controller").memory['MemoryCount'.lower()]
-	# sweepAngle = network.get_node("controller").memory['MemoryAngle'.lower()]
-	# total_measurement_value = network.get_node("controller").memory['XLMeasureValue'.lower()]
+	fidelities = network.get_node("controller").register_dict["fidelity"]
+	
+	counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
+	measure_list = network.get_node("controller").memory['MeasureValuePerMeasure'.lower()]
+	measure_amount = network.get_node("controller").memory['MeasureAmountMemoryValue'.lower()]
+	Total_succes_count = network.get_node("controller").memory['MemoryCount'.lower()]
+	sweepAngle = network.get_node("controller").memory['MemoryAngle'.lower()]
+	total_measurement_value = network.get_node("controller").memory['XLMeasureValue'.lower()]
 	
 	# dec = str(electron_T2)+"B"+str(B_osc)+"detuning"+str(detuning)
 	# dec = str(carbon_T2)+"B"+str(B_osc)+"detuning"+str(detuning)
@@ -166,7 +165,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# measure_result = network.get_node("controller").memory['measurevaluemem']
 	# time_measure = np.arange(0,50001,100)
 	# print(measure_result)
-	# time = np.arange(0,10,0.01)
+	# time_measure = np.arange(0.0002118,0.00022,0.00000012)
  
  
 	# print("printing list values")
@@ -178,10 +177,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# print('the new matrix is ')
 	# print(matrix_new)
 	# data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist()}, "Surface-7_first_state_Siddhant.json")
-	# data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist(), "fidelity":fidelities }, "test_GHZ_plain_"+str(detuning)+"hz_withFidelity_fixed.json")
 	
  
-	# data_storer({"result":measure_result, "time":time_measure.tolist()}, "ramsey_fringe_carbon_new_detuning"+dec+"_1_lab.json")
+	data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist(), "fidelity":fidelities }, "fidelity_values_surface_7_1_photon_entanglement_check_decoherence_detuning_ketrep_2_XL_actually.json")
+	
+ 
+	# data_storer({"result":measure_result, "time":time_measure.tolist()}, "ramsey_fringe_carbon_for_experiment_withwaitdetuning_extra.json")
 	
 	# savename = "clk_"+str(clk_local)+"_test.json"
 	# data_storer({"result":measure_result, "Clk":clk_local}, savename)
@@ -193,9 +194,9 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# data_storer({"photonCount":network.get_node("controller").memory['PhotonCount']}, 'photoncount_p'+str(photon_detection_prob)+'.json')
 	# data_storer({"photon": network.get_node("NVnode0").subcomponents["local_controller"].memAddr_photon_count, "frequency":network.get_node("NVnode0").subcomponents["local_controller"].memAddr_freq}, "test_magnetic_bias_10ns_second_peak.json")
 	# print("now printing state within memory")
-	print(network.qubit_total)
+	# print(network.qubit_total)
 	
-	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "XL_measurement_values_angle_new_macros_decoherence_detuning_10khz_clk_10e6_cross_talk_on_13khzqubits.json")
+	data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_1_photonentanglement_decoherence_detuning_ketrep_2_XL_actually.json")
 
 	
 	
@@ -262,27 +263,34 @@ def printer(network):
 	# # print("combined carbon state")
 	# print(reduced_dm([q_elec,carbon_3]))
 	# print(reduced_dm(carbon_3))
-	print('density matrix after measure')
-	print(reduced_dm([q_elec,q_elec_2,carbon,carbon_2]))
-	print(reduced_dm([q_elec,q_elec_2,carbon_3]))
-	print("now printing state of carbon 1 and 2 on nvnode0")
-	print(reduced_dm([carbon,carbon_2]))
-	print("now printing state of carbon 1 and 2 on nvnode1")
-	print(reduced_dm([carbon_2,carbon_4]))
-	print("now printing state of carbon 3  on nvnode0 and 1")
-	print(reduced_dm([carbon_5,carbon_6]))
-	print("now printing state of carbon 1 and 2  on nvnode0 and 1")
-	print(reduced_dm([carbon,carbon_2,carbon_3,carbon_4]))
-	print("now printing state of electron and carbon 1 and 2  on nvnode0 and 1")
-	print(reduced_dm([q_elec,carbon_2,carbon_3,carbon_4]))
-	print("second time printing state of electron and carbon 1 and 2  on nvnode0 and 1")
-	print(reduced_dm([q_elec,q_elec_2,carbon_3,carbon_4]))
-	print("now printing state of carbon 3 and 4 on nvnode0 and 1")
-	print(reduced_dm([carbon_5,carbon_6,carbon_7,carbon_8]))
-	print("now printing state within memory")
-	print(network.qubit_total)
+	# print('density matrix after measure')
+	# print(reduced_dm([q_elec,q_elec_2,carbon,carbon_2]))
+	# print(reduced_dm([q_elec,q_elec_2,carbon_3]))
+	# print("now printing state of carbon 1 and 2 on nvnode0")
+	# print(reduced_dm([carbon,carbon_2]))
+	# print("now printing state of carbon 1 and 2 on nvnode1")
+	# print(reduced_dm([carbon_2,carbon_4]))
+	# print("now printing state of carbon 3  on nvnode0 and 1")
+	# print(reduced_dm([carbon_5,carbon_6]))
+	# print("now printing state of carbon 1 and 2  on nvnode0 and 1")
+	# print(reduced_dm([carbon,carbon_2,carbon_3,carbon_4]))
+	# print("now printing state of electron and carbon 1 and 2  on nvnode0 and 1")
+	# print(reduced_dm([q_elec,carbon_2,carbon_3,carbon_4]))
+	# print("second time printing state of electron and carbon 1 and 2  on nvnode0 and 1")
+	# print(reduced_dm([q_elec,q_elec_2,carbon_3,carbon_4]))
+	# print("now printing state of carbon 3 and 4 on nvnode0 and 1")
+	# print(reduced_dm([carbon_5,carbon_6,carbon_7,carbon_8]))
+	# measure(carbon_8)
+	# measure(carbon_2)
+	# measure(carbon)
+
+ 
+	# print("now printing state within memory")
+	# print(network.qubit_total)
 	print('the carbon state is')
 	print(carbon.qstate.qrepr)
+	print(carbon_2.qstate.qrepr)
+
 	# print(reduced_dm([carbon_5,carbon_7,carbon_6,carbon_8]))
  
 
@@ -323,7 +331,7 @@ if __name__ == "__main__":
 	if len(sys.argv) == 1:
 		main(node_number = 2,qubit_number=3, printstates=True, detuning = 1e3, electron_T2= 5e3, carbon_T2 = 5e6 ,single_instruction = False, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 10e6)
 	elif sys.argv[1] == "noiseless":
-		main(node_number = 2,qubit_number=6, printstates=True, detuning = 0, electron_T2= 0, carbon_T2 = 0 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0)
+		main(node_number = 2,qubit_number=5, printstates=True, detuning = 0, electron_T2= 0, carbon_T2 = 0 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
 		# duration_list.append(time.perf_counter() - start_time)
 		# with open("/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:
 		# 		json.dump({"time:":duration_list}, file_object)

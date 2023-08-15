@@ -7,21 +7,27 @@ from Components import *
 from netsquid.nodes.network import Network
 
 # Setup the network
-def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, node_number = 2, noiseless = True, CarbonAparr = None,photon_detection_probability=1, absorption_probability = 1, no_z_precission = 1, decay = False, photon_emission_noise = False, detuning = 0, electron_T2 = None, carbon_T2 = None, electron_T1 = None, carbon_T1 = None,single_instruction = True,B_osc = 400e-6, B_z = 40e-3,frame = "rotating", wait_detuning = 1,clk_local = 0):
+def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, node_number = 2, noiseless = True, CarbonAparr = None,photon_detection_probability=1, absorption_probability = 1, no_z_precission = 1, decay = False, photon_emission_noise = False, detuning = 0, electron_T2 = None, carbon_T2 = None, electron_T1 = None, carbon_T1 = None,single_instruction = True,B_osc = 400e-6, B_z = 40e-3,frame = "rotating", wait_detuning = 1,clk_local = 0,rotation_with_pi = 1):
 	NV_node_list = [] # Create an empty list, so the nodes can be appended to this list, creating a list of nodenames
 	
 	# If values for the parallel hyperfine parameter for the carbon nuclei is given, that values are used, otherwise predifined values are used
 	if CarbonAparr == None:
-		pre_def_A_parr = [213e3, 20e3,-48e3,110e3,300e3,400e3,500e3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #213e3 7e3# Predefined values for the parallel hyperfine parameter for the carbon nuclei
+		pre_def_A_parr = [27218.2, 110e3, 20e3,-48e3,110e3,300e3,400e3,500e3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #213e3 7e3# Predefined values for the parallel hyperfine parameter for the carbon nuclei
+		pre_def_A_perp = [131784.6]+[0]*16 #213e3 7e3# Predefined values for the parallel hyperfine parameter for the carbon nuclei
+
 	else: # [213e3, 20e3,-48e3,36e3,13e3,28e3,100e3
 		pre_def_A_parr = CarbonAparr # If values are given, these values are used
 	
 	# In this for loop the wanted amount of nodes are going to be made, a quantum processor will made and added for every node.
 	for i in range(int(node_number)): 
-		NV_center_1 = NVQuantumProcessor(num_positions=int(qubit_number), noiseless=noiseless, electron_T2=electron_T2,carbon_T2=carbon_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1)  # make 3 quantum NV processors# the name of the nv center is 'nv_center_quantum_processor'
+		NV_center_1 = NVQuantumProcessor(num_positions=int(qubit_number)+1, noiseless=noiseless, electron_T2=electron_T2,carbon_T2=carbon_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1)  # make 3 quantum NV processors# the name of the nv center is 'nv_center_quantum_processor'
 		NV_center_1.NV_state = 'NV-'
 		for k in range(len(NV_center_1.mem_positions)-2): 
 			NV_center_1.mem_positions[k+1].add_property(name = "A_parr", value = pre_def_A_parr[k]) #add the parallel values to the memory positions of the carbon nuclei of every node.
+			NV_center_1.mem_positions[k+1].add_property(name = "A_perp", value = pre_def_A_perp[k]) #add the parallel values to the memory positions of the carbon nuclei of every node.
+		pre_def_A_parr_N = 2189.288e3
+		NV_center_1.mem_positions[qubit_number].add_property(name = "A_parr", value = pre_def_A_parr_N) #add the parallel values to the memory positions of the carbon nuclei of every node.
+		
 		phys_instruction_adder(NV_center_1) #add the needes physical instructions to the diamond quantum processor
 		
 		# Port names are added to the nv center
@@ -63,7 +69,7 @@ def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, 
 
 		network.add_connection(controller, NV_node_list[i], connection = connection, label = "classical_C2"+str(i), port_name_node1 = "Out_nvnode"+str(i), port_name_node2 = "In_nvnode"+str(i))
 		print("before subcomponent adder")
-		subcomponent_adder(NV_node_list[i], photon_detection_probability, absorption_probability, no_z_precission, decay, photon_emission_noise, detuning,single_instruction,B_osc,frame, wait_detuning,clk_local)
+		subcomponent_adder(NV_node_list[i], photon_detection_probability, absorption_probability, no_z_precission, decay, photon_emission_noise, detuning,single_instruction,B_osc,frame, wait_detuning,clk_local,rotation_with_pi)
 		print("after subcomponent adder")
 		if i <int(node_number)-1:
 			entanglement_components_adder(network, i)
@@ -73,14 +79,14 @@ def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, 
 	return network
 
 # Add all the components of the NVNodes to the NVnodes
-def subcomponent_adder(Node,photon_detection_probability, absorption_probability, no_z_precission, decay, photon_emission_noise, detuning,single_instruction,B_osc,frame, wait_detuning,clk_local):
+def subcomponent_adder(Node,photon_detection_probability, absorption_probability, no_z_precission, decay, photon_emission_noise, detuning,single_instruction,B_osc,frame, wait_detuning,clk_local,rotation_with_pi):
 	photodetector = Photodetector(name = "photodetector", port_names = ['In_p', 'Out_p'])
 	switches = Switches(name = "switches", port_names = ['In_switch', 'Out_switch'])
 	Node.add_subcomponent(photodetector)
 	Node.add_subcomponent(switches)
 	microwave_generator = Microwave_generator(name="microwave", port_names = ["In_microwave"],B_osc = B_osc)
 	Node.add_subcomponent(microwave_generator)
-	local_controller = Local_controller(name = "local_controller",node = Node, port_names = ['In_cont','Out_cont_data', 'Out_cont', 'Out_cont_micro'], photon_detection_probability=photon_detection_probability, absorption_probability = absorption_probability, no_z_precission = no_z_precission, decay = decay, photon_emission_noise = photon_emission_noise, detuning = detuning,single_instruction = single_instruction, frame = frame,wait_detuning=wait_detuning,clk_local = clk_local)	
+	local_controller = Local_controller(name = "local_controller",node = Node, port_names = ['In_cont','Out_cont_data', 'Out_cont', 'Out_cont_micro'], photon_detection_probability=photon_detection_probability, absorption_probability = absorption_probability, no_z_precission = no_z_precission, decay = decay, photon_emission_noise = photon_emission_noise, detuning = detuning,single_instruction = single_instruction, frame = frame,wait_detuning=wait_detuning,clk_local = clk_local, rotation_with_pi = rotation_with_pi)	
 	Node.add_subcomponent(local_controller)
 	
 
