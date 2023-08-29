@@ -1,6 +1,6 @@
 import netsquid as ns
 from netsquid.components.qprocessor import PhysicalInstruction
-from netsquid.components.instructions import INSTR_CROT, INSTR_ROT, INSTR_ROT_Z
+from netsquid.components.instructions import INSTR_CROT, INSTR_ROT, INSTR_ROT_Z, INSTR_X, INSTR_Y, INSTR_Z
 from netsquid_nv.nv_center import NVQuantumProcessor
 from netsquid.components.instructions import IGate
 from Components import *
@@ -200,6 +200,22 @@ def phys_instruction_adder(Node):
                                 topology=electron_carbon_topologies,
                                 duration=0)) 
 
+	
+	phys_instructions.append(
+            PhysicalInstruction(INSTR_X,
+                                parallel=False,
+                                topology=[Node.electron_position]+Node.carbon_positions,
+                                duration=0))
+	phys_instructions.append(
+            PhysicalInstruction(INSTR_Y,
+                                parallel=False,
+                                topology=[Node.electron_position]+Node.carbon_positions,
+                                duration=0))
+	phys_instructions.append(
+            PhysicalInstruction(INSTR_Z,
+                                parallel=False,
+                                topology=[Node.electron_position]+Node.carbon_positions,
+                                duration=0))
 	INSTR_CZXY = IGate(name = "CZXY_gate",num_positions=2)
     
 	phys_instructions.append(

@@ -12,9 +12,9 @@ import itertools
 import sys # in order to take command line inputs
 from multiprocessing import Pool
 
-# set_qstate_formalism(QFormalism.DM)
+set_qstate_formalism(QFormalism.DM)
 
-def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = True, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 1):
+def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = True, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
@@ -54,7 +54,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
 		filename = 'Surface-7_fault_tolerance_1_photonentanglement_multiple_rotations.txt'
-		# filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
+		# filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations_again.txt'
 
 		# filename = 'ramsey_fringe_c13.txt'
 		# filename = 'clk_test.txt'
@@ -104,6 +104,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 			lines.insert(2*i+3,'SwapEC q0 ' +str(i+1) )
 			lines.insert(2*i+4+2*(i+1),'QgateCC q0 '+str(i+1)+' 0 3.14')
 		print(lines)
+		
 	# Loop through every instruction
 	for i in range(len(lines)):
 		# Check if the instruction is 'empty' (thus only containing \n)
@@ -117,8 +118,19 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
 	
 	# Start the global controller functionality and give the global controller its instructions
-	send_protocol = Global_cont_Protocol(network = network, input_prog = line_reader, clk = clk)
-	send_protocol.start()
+	if Fault_tolerance_check == True:
+		prog_copy = line_reader
+		for i in range(len(line_reader)):
+			if line_reader[i][0] in ['BR','LDi','MUL','ADDi','ADD','ST','LABEL','printer','print']:
+				continue
+			for j in range(qubit_number-2):
+				for item in ['x','y','z']:
+					prog_copy.insert(i,'fault_inject q0 '+item+' '+str(j)) #add addition for multiple nv centers
+					send_protocol = Global_cont_Protocol(network = network, input_prog = line_reader, clk = clk)
+					send_protocol.start()
+	else:
+		send_protocol = Global_cont_Protocol(network = network, input_prog = line_reader, clk = clk)
+		send_protocol.start()
 	# Start the simulator run of netsquid
 	# start_time = time.time()
 	print(ns.sim_run()) 
@@ -179,7 +191,9 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist()}, "Surface-7_first_state_Siddhant.json")
 	
  
-	data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist(), "fidelity":fidelities }, "fidelity_values_surface_7_1_photon_entanglement_check_decoherence_detuning_ketrep_2_XL_actually.json")
+	# data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist(), "fidelity":fidelities }, "fidelity_values_surface_7_2_photon_entanglement_check_decoherence_detuning_dmrep_latest"+str(savename)+"_100meas.json")
+	data_storer({"state":abs(matrix_new).tolist(), "signs": sign_matrix.real.tolist(), "fidelity":fidelities }, "fidelity_values_surface_7_1_photon_entanglement_check_dmrep_latest_100meas_initialisation.json")
+
 	
  
 	# data_storer({"result":measure_result, "time":time_measure.tolist()}, "ramsey_fringe_carbon_for_experiment_withwaitdetuning_extra.json")
@@ -196,7 +210,9 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# print("now printing state within memory")
 	# print(network.qubit_total)
 	
-	data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_1_photonentanglement_decoherence_detuning_ketrep_2_XL_actually.json")
+	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_photonentanglement_decoherence_detuning_dmrep_latest"+str(savename)+"_100meas.json")
+	data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_1_dmrep_latest_100meas_intialisation.json")
+
 
 	
 	
@@ -333,11 +349,14 @@ if __name__ == "__main__":
 	elif sys.argv[1] == "noiseless":
 		main(node_number = 2,qubit_number=5, printstates=True, detuning = 0, electron_T2= 0, carbon_T2 = 0 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
 		# duration_list.append(time.perf_counter() - start_time)
+		#carbon decoherence time is taken from paper sent by nic
 		# with open("/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:
 		# 		json.dump({"time:":duration_list}, file_object)
 	elif sys.argv[1] == "Pool":
 		with Pool() as p:
-			arg = [ (1,None,2,3), (2,None,2,3), (3,None,2,3), (4,None,2,3), (5,None,2,3), (6,None,2,3), (7,None,2,3), (8,None,2,3), (9,None,2,3), (10,None,2,3) ]
+			# arg = [ (1,None,2,5,0,False,None,4e-3,2e-3,True,0,5e3,5e6), (2,None,2,3), (3,None,2,3), (4,None,2,3), (5,None,2,3), (6,None,2,3), (7,None,2,3), (8,None,2,3), (9,None,2,3), (10,None,2,3) ]
+			arg = [(i,None,2,5,0,False,None,4e-3,2e-3,True,0,5e3,0,0,5e6) for i in range(5)]
+
 			p.starmap(main,arg)
 			# duration_list.append(time.perf_counter() - start_time)
 			# with open("/workspaces/Thesis/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:

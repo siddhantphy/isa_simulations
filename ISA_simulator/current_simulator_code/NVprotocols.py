@@ -1,5 +1,6 @@
 from logging import raiseExceptions
 import netsquid as ns
+from netsquid.components.instructions import INSTR_X, INSTR_Y, INSTR_Z
 from netsquid.protocols import  Protocol, Signals
 import numpy as np
 import math
@@ -56,6 +57,7 @@ class Global_cont_Protocol(Protocol):
 		self.clk = clk
 		zeros = [0+0j]*16
 		self.network.qubit_total = np.diag(zeros)
+		self.network.qubit_store = np.diag(zeros)
 		self.controller.register_dict["fidelity"] = []
 		self.clk_cycles = self.controller.clk_cycle_dict
 		self.clk_flag = 0
@@ -202,8 +204,8 @@ class Global_cont_Protocol(Protocol):
 				if items[7] == 'surface':
 					rotation_angle = float(items[8]) if items[8][0].isdigit() else self.controller.register_dict[items[8]]
 					rotation_phase = float(items[9]) if items[9][0].isdigit() else self.controller.register_dict[items[9]]
-					cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
-					sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
+					cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
 					# middle_line = [0]*16
 					# middle_value_line = [0]
@@ -211,12 +213,13 @@ class Global_cont_Protocol(Protocol):
 					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
 					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
 					q0,q1,q2,q3 = create_qubits(4)
+					self.network.qubit_store = perfect_state
 					assign_qstate(qubits,perfect_state)
 				
 				# Assign GHZ state to the electrons
 				else:
 					assign_qstate(qubits, electron_GHZ)
-			elif items[0] == "nventangle_real":
+			elif items[0] == "nventangle_real": #link paper here
 				Nodes = [self.network.get_node(items[1]), self.network.get_node(items[2])]
 				electrons = []
 
@@ -225,44 +228,81 @@ class Global_cont_Protocol(Protocol):
 					electrons.append(items_node.qmemory.peek(0)[0])
 				
 				# Make the wanted GHZ state
-				rotation_angle = 0
-				rotation_phase = 0
-				cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
-				sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
 				Zerolist = [0]*2
 				checker = [0.5]+Zerolist+[0.5]
 				checker_no = [0.5]+Zerolist+[-0.5]
 				checker_no_2 = [-0.5]+Zerolist+[0.5]
 				# entangled_state = entangle_create()
 				# def entangle_create():
-				alpha_A = 0
-				alpha_B = 0
-				p_det_A = 0
-				p_det_B = 0
-				p_dc = 0
-				V = 0
-				plusmin = np.random.binomial(1,1)*2-1
+				# if one assumes pdet = pdeta, pdetb, pdc = 0, alpha = alpha_a = alpha_b and V = 1, then the fidelity of pab with the closest bell satte is F = 1-alpha and the generation rate is rab = 2alpha pdet
+				alpha_A = 0.07
+				alpha_B = 0.05
+				p_det_A = 3.6e-4
+				p_det_B = 4.4e-4
+				p_dc = 1.5e-7
+				V = 1
+				plusmin = 0
+				counter = 0
+				gen_rate = 0
+
+				while ((plusmin != 1) or (gen_rate !=1)):
+					plusmin = np.random.binomial(1,0.5)*2-1
+					# gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
+					gen_rate = np.random.binomial(1,1/100)
+					counter +=1
+				print(f"the counter value is {counter}")
+				# while gen_rate !=1:
+				# 	gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
+				# 	counter +=1
 				charge_state_fail = np.random.binomial(1,0)
+				# print(f"the charge state fail is {charge_state_fail}")
 				# if charge_state_fail:
 					# entangle_create()
 				# print(f"check plusmin probability {plusmin}")
 				## determine entanglement parameters
+				#duration time of total entanlgement, max of 2.5 ms
 				p00 = alpha_A*alpha_B*(p_det_A+p_det_B+2*p_dc)
 				p01 = alpha_A*(1-alpha_B)*(p_det_A+2*p_dc)
 				p10 = alpha_B*(1-alpha_A)*(p_det_B+2*p_dc)
 				p11 = 2*(1-alpha_A)*(1-alpha_B)*p_dc
-				# p_tot = p00+p01+p10+p11
+				p_tot = p00+p01+p10+p11
+				electron_entangled_state = np.array([[p00/p_tot,0,0,0],[0,p01/p_tot,plusmin*np.sqrt(V*p01*p10)/p_tot,0],[0,plusmin*np.sqrt(V*p01*p10)/p_tot,p10/p_tot,0],[0,0,0,p11/p_tot]])
 				zeroline = [0]*4
-				electron_GHZ = np.array([checker,zeroline,zeroline,checker])
+				if charge_state_fail == 1:
+					pass
+				else:
+					operation_duration_time = 5555.55*counter #5555.55 comes from 2.5(ms)/450(entanglement attempts) look at the paper
+					# print(f"the operation duration time is {operation_duration_time}")
+					time_message_to_NV_centers = ['wait', operation_duration_time]
+					port_out_1 = self.controller.ports["Out_nvnode0"]
+					port_out_2 = self.controller.ports["Out_nvnode1"]
+					port_out_1.tx_output(time_message_to_NV_centers)
+					port_out_2.tx_output(time_message_to_NV_centers)
+					# print('do i see this')
+					evt_wait_port_1 = self.await_port_input(port_out_1)
+					evt_wait_port_2 = self.await_port_input(port_out_2)
+					yield evt_wait_port_2 and evt_wait_port_1
+					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
+					# print(f"the qubit state is {electron_GHZ}")
+					assign_qstate(electrons, electron_GHZ)
+					yield self.await_timer(1)
+					# assign_qstate(electrons, electron_GHZ)
+
+					
+				
 				# electron_GHZ_real = np.array([[p00,0,0,0],[0,p01, plusmin*np.sqrt(V*p01*p10),0],[0, plusmin*np.sqrt(V*p01*p10),p10,0],[0,0,0,p11]])
 				# electron_GHZ_real = np.multiply(electron_GHZ_real,1/p_tot) #perfect config is alpha 0.5 and 0.5
 				# return electron_GHZ
+				
+				# yield self.await_port_input(port_out_1)
+				# yield self.await_port_input(port_out_2)
+				# print('does it end here?')
+
 
 				# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
 				# perfect_state = np.array([0.5, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
 				# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
 				# print(f"the injected state is {electron_GHZ}")
-				assign_qstate(electrons, electron_GHZ)
     
 			elif items[0] == "ghz_setter_2n" or items[0] == "nventangle":
 				# Get the nodes for which the GHZ states needs to be set
@@ -297,6 +337,12 @@ class Global_cont_Protocol(Protocol):
 			# Added in order for the instructions not to crash.
 			elif items[0] == "label" or items[0][-1] == ":":
 				pass
+			
+			elif items[0] == "fault_inject":
+				injection = items[2].lower()
+				instruction_dict = {'x':INSTR_X, 'y':INSTR_Y, 'z':INSTR_Z}
+				position = float(items[3])
+				self.controller.get_node("nvnode"+items[1][-1]).execute_instruction(instruction_dict[injection], [position])
 			elif items[0] == "qgatee":
 				offset = len(items[1][:-1])
 				port_out = self.controller.ports["Out_nvnode"+items[1][offset:]]
@@ -469,9 +515,10 @@ class Global_cont_Protocol(Protocol):
 					rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
 					rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
 					
-					cos_value = np.cos(rotation_angle)**2/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
-					sin_value = np.sin(rotation_angle)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle)**4+np.sin(rotation_angle)**4))/(np.sqrt(2))
+					cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
+					print(f"the values for the matrix are {cos_value} and {sin_value}")
 					# middle_line = [0]*16
 					# middle_value_line = [0]
 					# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
@@ -479,6 +526,59 @@ class Global_cont_Protocol(Protocol):
 					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
 					q0,q1,q2,q3 = create_qubits(4)
 					assign_qstate([q0,q1,q2,q3],perfect_state)
+					carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
+					self.network.qubit_total += carbon_matrix
+					q4,q5,q6,q7 = create_qubits(4)
+					assign_qstate([q4,q5,q6,q7],carbon_matrix)
+					fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
+					# fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
+					self.controller.register_dict["fidelity"].append(fidelity_value)
+					# print(f"the perfect state is {perfect_state}")
+					print(f"the state of the qubit is {q0.qstate.qrepr}")
+					print(f"the state of the qubit is {carbon_matrix}")
+					print(f"the fidelity value is {fidelity_value}")
+			elif items[0] == 'fidelity_calc':
+				upper_line = [0.5]+[0]*14+[0.5]
+				middle_line = [0]*16
+				upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
+				dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
+   
+				# carbon = self.network.get_node("nvnode0").qmemory.peek(1)[0]
+				# carbon_2 = self.network.get_node("nvnode1").qmemory.peek(1)[0]
+				# carbon_3 = self.network.get_node("nvnode2").qmemory.peek(1)[0]
+				# carbon_4 = self.network.get_node("nvnode3").qmemory.peek(1)[0]
+				carbon_1 = self.network.get_node("nvnode0").qmemory.peek(3)[0]
+				carbon_2 = self.network.get_node("nvnode1").qmemory.peek(3)[0]
+				carbon_3 = self.network.get_node("nvnode0").qmemory.peek(4)[0]
+				carbon_4 = self.network.get_node("nvnode1").qmemory.peek(4)[0]
+				if items[1] == 'surface':
+					# rotation_angle = float(items[2])
+					# rotation_phase = float(items[3])
+					rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
+					rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
+					
+					cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					# upper_line = [0.5]+[0]*14+[0.5]
+					# middle_line = [0]*16
+					# middle_value_line = [0]
+					# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
+					perfect_state = self.network.qubit_store
+					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
+					q0,q1,q2,q3 = create_qubits(4)
+					assign_qstate([q0,q1,q2,q3],perfect_state)
+					if items[2] == "XL":
+						ns.qubits.operate(q0,ns.X)
+						ns.qubits.operate(q2,ns.X)
+					elif items[2] == "YL":
+						ns.qubits.operate(q0,ns.Y)
+						ns.qubits.operate(q2,ns.Y)
+					elif items[2] == "ZL":
+						ns.qubits.operate(q0,ns.Z)
+						ns.qubits.operate(q2,ns.Z)
+					elif items[2] == "HL":
+						ns.qubits.operate(q0,ns.H)
+						ns.qubits.operate(q2,ns.H)
 					carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
 					self.network.qubit_total += carbon_matrix
 					q4,q5,q6,q7 = create_qubits(4)
@@ -1020,7 +1120,6 @@ class Loc_Cont_Protocol(Protocol):
 
 			# Perform memory swapping algorithm
 			elif message[0] == "memswap_electron_to_carbon" or message[0] == "swapec":
-	
 				message_send.append(["excite_mw","0", np.pi/self.controller.elec_rabi_reg[0]/2, self.controller.elec_freq_reg[0], 1.57, 400e-6])
 				message_send.append(["excite_mw","0", np.pi/self.controller.carbon_rabi_frequencies[0]/2, self.controller.carbon_frequencies[int(message[1])],3.14,400e-6])
 				message_send.append(["excite_mw","0", np.pi/self.controller.elec_rabi_reg[0], self.controller.elec_freq_reg[0], 0, 400e-6])
