@@ -1,8 +1,8 @@
 #preset registers
 LDi 0 sweepAngleReg
-LDi 0 SweepStepReg
-LDi 0 SweepStopReg
-LDi 1 MeasureAmountReg
+LDi 0.3 SweepStepReg
+LDi 3.16 SweepStopReg
+LDi 100 MeasureAmountReg
 LDi 0 MeasureStartReg
 LDi 0 SuccesCountReg
 LDi 0 TotalMeasureMul
@@ -18,20 +18,30 @@ Initialize q0
 Initialize q1
 SwapEC q0 1 
 SwapEC q1 1
+#initialise data qubits
+
 Initialize q0
 Initialize q1
 SwapEC q0 2 
 SwapEC q1 2 
+
 Initialize q0
 Initialize q1
-SwapEC q0 3 
+SwapEC q0 3
 SwapEC q1 3 
-Initialize q0
-Initialize q1
+
+#Initialize q0
+#Initialize q1
+#SwapEC q0 3 
+#SwapEC q1 3 
+#Initialize q0
+#Initialize q1
 
 QgateUC q0 1 1.57 1.57 0 
 #QgateUC q1 0 1.57 1.57 0 
-#QgateUC q0 3 0 sweepAngleReg 0
+QgateUC q0 3 0 sweepAngleReg 0
+QgateUC q0 2 0 sweepAngleReg 0
+
 #QgateUC q1 1 1.57 4.71 0
 #qgatez q0 2 1.57
 #qgatez q0 3 1.57
@@ -39,11 +49,12 @@ QgateUC q0 1 1.57 1.57 0
 init_real q0
 init_real q1
 
+#NVentangle_magic NVnode0 NVnode1
 NVentangle_real NVnode0 NVnode1
 #QgateE q0 0 3.14 
 
-full_swap q0 0 
-full_swap q1 0 
+full_swap_own q0 0 
+full_swap_own q1 0 
 
 NVentangle_real NVnode0 NVnode1
 #QgateE q0 0 3.14 
@@ -60,7 +71,7 @@ qgatez q0 0 1.57
 qgateuc q0 1 1.5707963267949 1.5707963267949 1
 qgateuc q0 1 0.0 3.1415926535898 1
 
-full_swap q0 0
+full_swap_own q0 0
 #qgatez q0 0 3.14
 # hadamard on the carbon
 qgateuc q0 1 1.5707963267949 1.5707963267949 1
@@ -73,17 +84,20 @@ qgatez q0 0 1.57
 # hadamard on the carbon
 qgateuc q0 1 1.5707963267949 1.5707963267949 1
 qgateuc q0 1 0.0 3.1415926535898 1
-full_swap q0 1
-#qgatez q0 0 3.14
+full_swap_own q0 1
 qgatee q0 1.5707963267949 1.5707963267949
 qgatee q0 0.0 3.1415926535898
 measure q0
-print i am stuck before stateinject
-#perform the check for the first measurement
-printer MeasureResultRegNVnode0
-BR MeasureResultRegNVnode0 < 0 start
-state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface 0 0
 full_swap_own q0 1
+
+#perform the check for the first measurement
+print MeasureResultRegNVnode0 next
+printer MeasureResultRegNVnode0
+BR MeasureResultRegNVnode0 < 0 stop
+#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface 0 0
+#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface sweepAngleReg 0
+
+full_swap_own q0 0
 full_swap_own q1 0
 
 #controlled x rotation on the carbon D1
@@ -93,7 +107,7 @@ qgatez q0 0 1.57
 #controlled x rotation on the carbon D2
 qgatecc q1 2 0.0 3.1415926535898
 qgatez q1 0 1.57
-
+#next one was 0, i think it should be 1 so i changed it (folkert)
 full_swap_own q0 0
 #qgatez q0 0 3.14
 full_swap_own q1 0
@@ -116,21 +130,75 @@ measure q0
 measure q1
 MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 
-swapce q0 X 0 
+#next one was 0, i think it should be 1, changed to 1 (folkert)
+swapce q0 X 0
 swapce q1 X 0 
 
 measure q0
 measure q1
 MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
 MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
-#BR TotalMeasureTwo < 0 start
-print i am stuck
-BR TotalMeasure < 0 start
-
-print states
+print last measurement results next
+printer TotalMeasure
 printer TotalMeasureOne
 printer TotalMeasureTwo
-printer TotalMeasure
+BR TotalMeasureTwo < 0 stop
+BR TotalMeasureOne < 0 stop
 
-statestore surface 0 0
+#BR TotalMeasure < 0 stop
+
+
+#### start of measuring the states ###
+
+
+### start of performing logical operations ###
+
+## example logical X gate ##
+#controlled x rotation on the carbon D4
+#qgatecc q1 3 0.0 3.1415926535898
+#qgatez q1 0 1.57
+#controlled x rotation on the carbon D2
+#qgatecc q1 2 0.0 3.1415926535898
+#qgatez q1 0 1.57
+## end of example logical X gate
+
+
+### end of performing logical operations ###
+#LABEL ycount
+init_real q0
+init_real q1
+statestore surface sweepAngleReg 0
+
+ADDi SuccesCountReg 1
+LDi 1 SuccesReg
+
+swapce q0 x 2  
+Measure q0
+Initialize q0
+wait q0 1
+MOV resultstorer MeasureResultRegNVnode0
+swapce q0 x 3  
+Measure q0
+Initialize q0
+wait q0 1 
+MUL CurrentMeasureValue MeasureResultRegNVnode0 resultstorer
+ADD TotalMeasureMul CurrentMeasureValue TotalMeasureMul
+ST CurrentMeasureValue MeasureValuePerMeasure
 LABEL stop
+
+ADDi MeasureStartReg 1
+printer MeasureStartReg
+ST SuccesReg SuccesRegPerMeasure
+LDi 0 SuccesReg
+BR MeasureStartReg < MeasureAmountReg start
+ST SuccesCountReg MemoryCount
+ST sweepAngleReg MemoryAngle
+ST TotalMeasureMul XLMeasureValue
+ADD sweepAngleReg sweepAngleReg SweepStepReg
+LDi 0 MeasureStartReg
+LDi 0 SuccesCountReg
+LDi 0 TotalMeasureMul
+printer sweepAngleReg
+BR sweepAngleReg < SweepStopReg start
+ST MeasureAmountReg MeasureAmountMemoryValue
+### end of measuring the states ###
