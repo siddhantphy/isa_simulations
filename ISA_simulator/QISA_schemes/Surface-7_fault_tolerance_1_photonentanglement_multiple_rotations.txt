@@ -1,5 +1,5 @@
 #preset registers
-LDi 0.3 sweepAngleReg
+LDi 0 sweepAngleReg
 LDi 0.3 SweepStepReg
 LDi 3.16 SweepStopReg
 LDi 100 MeasureAmountReg
@@ -106,9 +106,9 @@ qgateuc q1 0 1.5707963267949 1.5707963267949 1
 qgateuc q1 0 0.0 3.1415926535898 1
 measure q0
 measure q1
-print first measurements
-printer MeasureResultRegNVnode0
-printer MeasureResultRegNVnode1
+#print first measurements
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
 MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 BR TotalMeasureOne < 0 stop
 
@@ -152,9 +152,9 @@ qgatee q1 0.0 3.1415926535898
 measure q0
 measure q1
 
-print second measure set
-printer MeasureResultRegNVnode0
-printer MeasureResultRegNVnode1
+#print second measure set
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
 MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 BR TotalMeasureOne < 0 stop
 
@@ -165,9 +165,9 @@ measure q0
 measure q1
 MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
 MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
-print third measure set
-printer MeasureResultRegNVnode0
-printer MeasureResultRegNVnode1
+#print third measure set
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
 BR TotalMeasureTwo < 0 stop
 #BR TotalMeasure < 0 stop
 
@@ -188,8 +188,8 @@ QgateCC q0 3 0 3.14
 QgateCC q0 3 1.57 3.14 
 QgateZ q0 0 4.71
 
-#QgateE q0 1.57 1.57 
-#QgateE q0 0 3.14 
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
 
 ### cz implementation on NVnode1
 QgateE q1 1.57 1.57 
@@ -202,8 +202,8 @@ QgateCC q1 3 0 3.14
 QgateCC q1 3 1.57 3.14 
 QgateZ q1 0 4.71
 
-#QgateE q1 1.57 1.57 
-#QgateE q1 0 3.14 
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
 
 #qgatee q0 1.5707963267949 1.5707963267949
 #qgatee q0 0.0 3.1415926535898
@@ -219,9 +219,9 @@ measure q1
 
 MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
 MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
-print fourth  measure set
-printer MeasureResultRegNVnode0
-printer MeasureResultRegNVnode1
+#print fourth  measure set
+#printer MeasureResultRegNVnode0
+#printer MeasureResultRegNVnode1
 BR TotalMeasureTwo < 0 stop
 #BR TotalMeasure < 0 stop
 #### start of measuring the states ###
