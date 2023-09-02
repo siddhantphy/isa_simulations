@@ -2,7 +2,7 @@
 LDi 0 sweepAngleReg
 LDi 0.3 SweepStepReg
 LDi 3.16 SweepStopReg
-LDi 100 MeasureAmountReg
+LDi 50 MeasureAmountReg
 LDi 0 MeasureStartReg
 LDi 0 SuccesCountReg
 LDi 0 TotalMeasureMul
@@ -18,18 +18,10 @@ Initialize q0
 Initialize q1
 SwapEC q0 1 
 SwapEC q1 1
-#initialise data qubits
-
 Initialize q0
 Initialize q1
 SwapEC q0 2 
 SwapEC q1 2 
-
-Initialize q0
-Initialize q1
-SwapEC q0 3
-SwapEC q1 3 
-
 #Initialize q0
 #Initialize q1
 #SwapEC q0 3 
@@ -39,9 +31,7 @@ SwapEC q1 3
 
 QgateUC q0 1 1.57 1.57 0 
 #QgateUC q1 0 1.57 1.57 0 
-QgateUC q0 3 0 sweepAngleReg 0
-QgateUC q0 2 0 sweepAngleReg 0
-
+#QgateUC q0 3 0 sweepAngleReg 0
 #QgateUC q1 1 1.57 4.71 0
 #qgatez q0 2 1.57
 #qgatez q0 3 1.57
@@ -53,8 +43,8 @@ init_real q1
 NVentangle_real NVnode0 NVnode1
 #QgateE q0 0 3.14 
 
-full_swap_own q0 0 
-full_swap_own q1 0 
+full_swap q0 0 
+full_swap q1 0 
 
 NVentangle_real NVnode0 NVnode1
 #QgateE q0 0 3.14 
@@ -85,19 +75,17 @@ qgatez q0 0 1.57
 qgateuc q0 1 1.5707963267949 1.5707963267949 1
 qgateuc q0 1 0.0 3.1415926535898 1
 full_swap_own q0 1
+#qgatez q0 0 3.14
 qgatee q0 1.5707963267949 1.5707963267949
 qgatee q0 0.0 3.1415926535898
 measure q0
-full_swap_own q0 1
 
 #perform the check for the first measurement
-print MeasureResultRegNVnode0 next
-printer MeasureResultRegNVnode0
 BR MeasureResultRegNVnode0 < 0 stop
 #state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface 0 0
-#state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface sweepAngleReg 0
+state_inject_ghz_4 NVnode0 Nvnode1 3 4 3 4 surface sweepAngleReg 0
 
-full_swap_own q0 0
+full_swap_own q0 1
 full_swap_own q1 0
 
 #controlled x rotation on the carbon D1
@@ -138,60 +126,8 @@ measure q0
 measure q1
 MUL TotalMeasureTwo MeasureResultRegNVnode0 MeasureResultRegNVnode1
 MUL TotalMeasure TotalMeasureOne TotalMeasureTwo
-print last measurement results next
-printer TotalMeasure
-printer TotalMeasureOne
-printer TotalMeasureTwo
-BR TotalMeasureTwo < 0 stop
-BR TotalMeasureOne < 0 stop
-
-#BR TotalMeasure < 0 stop
-
-### start of Z stabilizers
-
-
-Initialize q0
-Initialize q1
-
-### cz implementation on NVnode0
-QgateE q0 1.57 1.57 
-QgateE q0 0 3.14 
-QgateCC q0 2 0 3.14 
-QgateCC q0 2 1.57 3.14 
-QgateZ q0 0 4.71
-
-QgateCC q0 3 0 3.14 
-QgateCC q0 3 1.57 3.14 
-QgateZ q0 0 4.71
-
-QgateE q0 1.57 1.57 
-QgateE q0 0 3.14 
-
-### cz implementation on NVnode1
-QgateE q1 1.57 1.57 
-QgateE q1 0 3.14 
-QgateCC q1 2 0 3.14 
-QgateCC q1 2 1.57 3.14 
-QgateZ q1 0 4.71
-
-QgateCC q1 3 0 3.14 
-QgateCC q1 3 1.57 3.14 
-QgateZ q1 0 4.71
-
-QgateE q1 1.57 1.57 
-QgateE q1 0 3.14 
-
-#qgatee q0 1.5707963267949 1.5707963267949
-#qgatee q0 0.0 3.1415926535898
-
-#qgatee q1 1.5707963267949 1.5707963267949
-#qgatee q1 0.0 3.1415926535898
-
-
-measure q0
-measure q1
-
-### end of Z stabilizers
+#BR TotalMeasureTwo < 0 start
+BR TotalMeasure < 0 stop
 
 
 #### start of measuring the states ###
