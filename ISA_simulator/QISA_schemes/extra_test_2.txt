@@ -1,0 +1,7 @@
+LDi 0 Hello
+ST Hello idk
+LDi 235 Bye
+ST Bye Bye_again
+
+DataStorageName Hello123
+OutputStore idk Bye_again
