@@ -83,7 +83,35 @@ class Global_cont_Protocol(Protocol):
 		while i < (len(self.input_prog)-1): # Loop through all the instructions
 			i +=1
 			items = self.input_prog[i].lower().split() # Split the instructions into loose words, so the instruction word can be checked
-			if items[0] == "nventangle_magic": # Perform magic entanglement by use of statesampler
+			if items[0] == "{":
+
+				message_NV_center_1 = self._decompose_single_instruction(self.input_prog[i+1].lower().split())
+				message_NV_center_2 = self._decompose_single_instruction(self.input_prog[i+2].lower().split())
+				NV_center_1 = self.input_prog[i+1].lower().split()[1]
+				NV_center_2 = self.input_prog[i+2].lower().split()[1]
+				if NV_center_1[0] == "q":
+					NV_center_number_1 = NV_center_1[1:]
+					NV_center_number_2 = NV_center_2[1:]
+
+				else:
+					NV_center_number_1 = NV_center_1[6:]
+					NV_center_number_2 = NV_center_2[6:]
+
+				port_out_1 = self.controller.ports["Out_nvnode"+str(NV_center_number_1)]
+				port_out_2 = self.controller.ports["Out_nvnode"+str(NV_center_number_2)]
+				port_out_1.tx_output(message_NV_center_1)
+				port_out_2.tx_output(message_NV_center_2)
+				evt_wait_port_1 = self.await_port_input(port_out_1)
+				evt_wait_port_2 = self.await_port_input(port_out_2)
+				yield evt_wait_port_2 and evt_wait_port_1
+
+				# port_out.tx_output(items)
+				# yield self.await_port_input(port_out)
+				i +=3 #this will result in skipping performing the operations multiple times (because they are already done in parallel)
+				if self.input_prog[i].lower().split()[0] != "}":
+					raise ValueError("parallel operations have gone wrong, more then two parallel instructions are not supported")
+			elif items[0] == "nventangle_magic": # Perform magic entanglement by use of statesampler
+
 				# Get the 2 nodes for which the magic entanglement needs to be implemented
 				node1 = self.network.get_node(items[1]) 
 				node2 = self.network.get_node(items[2])
@@ -337,6 +365,8 @@ class Global_cont_Protocol(Protocol):
 			# Added in order for the instructions not to crash.
 			elif items[0] == "label" or items[0][-1] == ":":
 				pass
+			elif items[0] == "datastoragename" or items[0] == "outputstore":
+				pass
 			
 			elif items[0] == "fault_inject":
 				injection = items[2].lower()
@@ -554,11 +584,11 @@ class Global_cont_Protocol(Protocol):
 				if items[1] == 'surface':
 					# rotation_angle = float(items[2])
 					# rotation_phase = float(items[3])
-					rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
-					rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
+					# rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
+					# rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
 					
-					cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
-					sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					# cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					# sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
 					# middle_line = [0]*16
 					# middle_value_line = [0]
@@ -697,8 +727,79 @@ class Global_cont_Protocol(Protocol):
 				else:
 					time = self.clk_cycles[items[0]]*self.clk
 					yield self.await_timer(time)
- 
+	
+	def _decompose_single_instruction(self,items):
+		if items[0] == "qgatee":
+			offset = len(items[1][:-1])
+			port_out = self.controller.ports["Out_nvnode"+items[1][offset:]]
+			if items[3][0].isdigit() or items[3][0] == '-':
+				items[3] = float(items[3])
+			else:
+				items[3] = self.controller.register_dict[items[3]]
+			if items[2][0].isdigit() or items[2][0] == '-':
+				items[2] = float(items[3])
+			elif items[2][0] == "[":
+				checker = items[2].split(',')
+				# for i in range(3):
+				if checker[0][1:] in self.controller.register_dict:
+					checker[0] = self.controller.register_dict[checker[0][1:]]
+				else:
+					checker[0] = checker[0][1:]
+				if checker[1][:] in self.controller.register_dict:
+					checker[1] = self.controller.register_dict[checker[1][:]]
+				else:
+					checker[1] = checker[1]
+				if checker[2][:1] in self.controller.register_dict:
+					checker[2] = self.controller.register_dict[checker[0][:1]]
+				else:
+					checker[2] = checker[2][:1]
+					
+				items[2] = "["+str(checker[0])+","+str(checker[1])+","+str(checker[2])+"]"
+			else:
+				items[2] = str(self.controller.register_dict[items[2]])
+			items.remove(items[1])
+			
+
+		elif items[0] == "qgateuc" or items[0] == "qgatecc":
+			offset = len(items[1][:-1])
+			if items[4][0].isdigit() or items[4][0] == '-':
+				items[4] = float(items[4])
+			else:
+				items[4] = self.controller.register_dict[items[4]]
+			if items[3][0].isdigit() or items[3][0] == '-':
+				items[3] = float(items[3])
+			elif items[3][0] == "[":
+				checker = items[3].split(',')
+				# for i in range(3):
+				if checker[0][1:] in self.controller.register_dict:
+					checker[0] = self.controller.register_dict[checker[0][1:]]
+				else:
+					checker[0] = checker[0][1:]
+				if checker[1][:] in self.controller.register_dict:
+					checker[1] = self.controller.register_dict[checker[1][:]]
+				else:
+					checker[1] = checker[1]
+				if checker[2][:1] in self.controller.register_dict:
+					checker[2] = self.controller.register_dict[checker[0][:1]]
+				else:
+					checker[2] = checker[2][:1]
+					
+				items[3] = "["+str(checker[0])+","+str(checker[1])+","+str(checker[2])+"]"
+			else:
+				items[3] = str(self.controller.register_dict[items[3]])
+			items.remove(items[1])
+			
+		elif items[0] == "qgatez":
+			offset = len(items[1][:-1])
+			items.remove(items[1])
+
+		elif items[0] == "wait":
+				if items[2] in self.controller.register_dict:
+					items[2] = self.controller.register_dict[items[2]]
+				items.remove(items[1])
+		return items
 	def start(self):
+
 		super().start()
 		self.start_subprotocols()
 
