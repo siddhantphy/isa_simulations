@@ -14,7 +14,7 @@ from multiprocessing import Pool
 
 set_qstate_formalism(QFormalism.DM)
 
-def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = True, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False):
+def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = False, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
@@ -82,11 +82,26 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
 	# d = os.getcwd().parents[1]
-	print(f"the filename is {filename}")
+	#parameters are read in the following line
 	path = os.path.realpath(__file__)
 	dir = os.path.dirname(path)
+	dir = dir.replace('current_simulator_code', 'Parameter_files')
+	if noiseless == True:
+		fileopener = dir+"/parameters_noiseless.txt"
+	else:
+		fileopener = dir+"/parameters_noisy.txt"
+	parameter_dict = {}
+	with open(fileopener) as f:
+		parameters = f.readlines()
+	print(f"the file content is {parameters}")
+	print(f"the filename is {filename}")
+	for item in parameters:
+		parameter_name = item.split()[0]
+		parameter_value = item.split()[1]
+		parameter_dict[parameter_name] = parameter_value
+	print(parameter_dict)
 	# fileopener = dir +"../QISA_schemes/"+filename
-	dir = dir.replace('current_simulator_code', 'QISA_schemes')
+	dir = dir.replace('Parameter_files', 'QISA_schemes')
 	# save_direct = d.chdir("..")'
 	fileopener = dir+"/" +filename
 	with open(fileopener) as f:
@@ -114,12 +129,32 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 			if lines[i][0] != "#":
 				# Append every instruction which is not a comment or an empty instruction to the list of instructions which need to be interperted by the global controller.
 				line_reader.append(lines[i])
-				
-			
+	
+	#read the parameters from the parameter list
+	node_number = int(parameter_dict["NodeNumber"])
+	qubit_number = int(parameter_dict["QubitNumber"])
+	photon_detection_prob = float(parameter_dict["PhotonDetectionProbability"])
+	printstates = bool(parameter_dict["printstates"])
+	node_distance = float(parameter_dict["NodeDistance"])
+	photo_distance = float(parameter_dict["PhotonDistance"])
+	detuning = float(parameter_dict["Detuning"])
+	electron_T2 = float(parameter_dict["ElectronDecoherence"])
+	electron_T1 = float(parameter_dict["ElectronRelaxation"])
+	carbon_T2 = float(parameter_dict["CarbonDecoherence"])
+	carbon_T1 = float(parameter_dict["CarbonRelaxation"])
+	single_instruction = bool(parameter_dict["Crosstalk"])
+	no_z_precission = int(parameter_dict["NoZPrecession"])
+	frame = str(parameter_dict["frame"])
+	wait_detuning = float(parameter_dict["WaitDetuning"])
+	clk = float(parameter_dict["clk"])
+	clk_local = float(parameter_dict["clkLocal"])
+	B_z = float(parameter_dict["StaticField"])
+	rotation_with_pi = int(parameter_dict["RotationWithPi"])
+
 	
 	# Setup the network by calling the network setup function
 	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
-	prog_copy_for_check = line_reader
+	# prog_copy_for_check = line_reader
 	print('first check in progcopy')
 	print(line_reader)
 	# Start the global controller functionality and give the global controller its instructions
@@ -174,6 +209,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	if line_reader[-1].split()[0].lower() == "OutputStore".lower():
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
+		memory_values["parameters"] = parameter_dict
 		data_storer(memory_values,data_stored_name+".json")
 		
 	# counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
