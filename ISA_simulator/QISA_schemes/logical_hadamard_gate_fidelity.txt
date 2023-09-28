@@ -1,0 +1,230 @@
+##### PRESET REGISTERS #####
+LDi 0 Counter
+LDi 50 Iterations
+
+##### START OF THE LOOP #####
+LABEL start
+
+##### INITIALIZE ALL THE CARBON QUBITS IN THE NODES #####
+Initialize q0
+Initialize q1
+SwapEC q0 2
+SwapEC q1 2
+
+Initialize q0
+Initialize q1
+SwapEC q0 3 
+SwapEC q1 3
+
+##### START LOGICAL STATE INITIALIZATION #####
+# p_0
+
+
+##### XXXX STABILIZER #####
+# Create the Bell pair
+NVentangle_real NVnode0 NVnode1
+
+# CX rotation on D1
+qgatecc q0 2 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D2
+qgatecc q1 2 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# CX rotation on D3
+qgatecc q0 3 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D4
+qgatecc q1 3 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# H on E1
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# H on E2
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+# Measure the electrons
+measure q0
+measure q1
+
+# Post select with XXXX stabilizer
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasureOne < 0 stop
+
+
+##### Z1Z3 STABILIZER #####
+Initialize q0
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# CZ rotation on D1
+QgateCC q0 2 0 3.14 
+QgateCC q0 2 1.57 3.14 
+QgateZ q0 0 4.71
+
+# CZ rotation on D3
+QgateCC q0 3 0 3.14 
+QgateCC q0 3 1.57 3.14 
+QgateZ q0 0 4.71
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+measure q0
+BR MeasureResultRegNVnode0 < 0 stop
+
+##### Z2Z4 STABILIZER #####
+Initialize q1
+### cz implementation on NVnode1
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+QgateCC q1 2 0 3.14 
+QgateCC q1 2 1.57 3.14 
+QgateZ q1 0 4.71
+
+QgateCC q1 3 0 3.14 
+QgateCC q1 3 1.57 3.14 
+QgateZ q1 0 4.71
+
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+measure q1
+BR MeasureResultRegNVnode1 < 0 stop
+
+
+##### LOGICAL HADAMARD #####
+{
+qgateuc q0 2 1.5707963267949 1.5707963267949 1
+qgateuc q1 2 1.5707963267949 1.5707963267949 1
+}
+{
+qgateuc q0 2 0.0 3.1415926535898 1
+qgateuc q1 2 0.0 3.1415926535898 1
+}
+{
+qgateuc q0 3 1.5707963267949 1.5707963267949 1
+qgateuc q1 3 1.5707963267949 1.5707963267949 1
+}
+{
+qgateuc q0 3 0.0 3.1415926535898 1
+qgateuc q1 3 0.0 3.1415926535898 1
+}
+
+##### XXXX STABILIZER #####
+# Create the Bell pair
+NVentangle_real NVnode0 NVnode1
+
+# CX rotation on D1
+qgatecc q0 2 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D2
+qgatecc q1 2 0.0 3.1415926535898
+qgatez q1 0 1.57
+#next one was 0, i think it should be 1 so i changed it (folkert)
+
+# CX rotation on D3
+qgatecc q0 3 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D4
+qgatecc q1 3 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# H on E1
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# H on E2
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+# Measure the electrons
+measure q0
+measure q1
+
+# Post select with XXXX stabilizer
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasureOne < 0 stop
+
+
+##### Z1Z3 STABILIZER #####
+Initialize q0
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# CZ rotation on D1
+QgateCC q0 2 0 3.14 
+QgateCC q0 2 1.57 3.14 
+QgateZ q0 0 4.71
+
+# CZ rotation on D3
+QgateCC q0 3 0 3.14 
+QgateCC q0 3 1.57 3.14 
+QgateZ q0 0 4.71
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+measure q0
+BR MeasureResultRegNVnode0 < 0 stop
+
+##### Z2Z4 STABILIZER #####
+Initialize q1
+### cz implementation on NVnode1
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+QgateCC q1 2 0 3.14 
+QgateCC q1 2 1.57 3.14 
+QgateZ q1 0 4.71
+
+QgateCC q1 3 0 3.14 
+QgateCC q1 3 1.57 3.14 
+QgateZ q1 0 4.71
+
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+measure q1
+BR MeasureResultRegNVnode1 < 0 stop
+
+##### MEASURE THE DATA QUBITS #####
+swapce q0 x 2  
+Measure q0
+ST MeasureResultRegNVnode0 DataQubit1
+
+swapce q0 x 3  
+Measure q0
+ST MeasureResultRegNVnode0 DataQubit3
+
+swapce q1 x 2  
+Measure q1
+ST MeasureResultRegNVnode1 DataQubit2
+
+swapce q1 x 3  
+Measure q1
+ST MeasureResultRegNVnode1 DataQubit4
+print succes
+
+LABEL stop
+ADDi Counter 1
+Printer Counter
+BR Counter < Iterations start
+
+##### GET THE EXPECTATION VALUES #####
+
+##### OUTPUT DATA STORAGE #####
+DataStorageName process_tomography
+OutputStore DataQubit1 DataQubit2 DataQubit3 DataQubit4

@@ -278,7 +278,7 @@ class Global_cont_Protocol(Protocol):
 					# gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 					gen_rate = np.random.binomial(1,1/100)
 					counter +=1
-				print(f"the counter value is {counter}")
+				# print(f"the counter value is {counter}")
 				# while gen_rate !=1:
 				# 	gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 				# 	counter +=1

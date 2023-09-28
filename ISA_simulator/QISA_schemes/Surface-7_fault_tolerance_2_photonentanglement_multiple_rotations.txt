@@ -99,7 +99,7 @@ BR MeasureResultRegNVnode0 < 0 stop
 
 full_swap_own q0 0
 full_swap_own q1 0
-
+#### start of XXXX stabilizers
 #controlled x rotation on the carbon D1
 qgatecc q0 2 0.0 3.1415926535898
 qgatez q0 0 1.57
@@ -144,6 +144,7 @@ printer TotalMeasureOne
 printer TotalMeasureTwo
 BR TotalMeasureTwo < 0 stop
 BR TotalMeasureOne < 0 stop
+#### start of XXXX stabilizers
 
 #BR TotalMeasure < 0 stop
 
