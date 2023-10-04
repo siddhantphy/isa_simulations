@@ -57,7 +57,7 @@ class Global_cont_Protocol(Protocol):
 		self.clk = clk
 		zeros = [0+0j]*16
 		self.network.qubit_total = np.diag(zeros)
-		self.network.qubit_store = np.diag(zeros)
+		self.network.qubit_store = None
 		self.controller.register_dict["fidelity"] = []
 		self.clk_cycles = self.controller.clk_cycle_dict
 		self.clk_flag = 0
@@ -278,7 +278,7 @@ class Global_cont_Protocol(Protocol):
 					# gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 					gen_rate = np.random.binomial(1,1/100)
 					counter +=1
-				# print(f"the counter value is {counter}")
+				print(f"the counter value is {counter}")
 				# while gen_rate !=1:
 				# 	gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 				# 	counter +=1
@@ -526,47 +526,60 @@ class Global_cont_Protocol(Protocol):
 					print(self.controller.memory[items[1]])		
 
 			elif items[0] == 'statestore':
-				upper_line = [0.5]+[0]*14+[0.5]
-				middle_line = [0]*16
-				upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
-				dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
+				# upper_line = [0.5]+[0]*14+[0.5]
+				# middle_line = [0]*16
+				# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
+				# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
    
 				# carbon = self.network.get_node("nvnode0").qmemory.peek(1)[0]
 				# carbon_2 = self.network.get_node("nvnode1").qmemory.peek(1)[0]
 				# carbon_3 = self.network.get_node("nvnode2").qmemory.peek(1)[0]
 				# carbon_4 = self.network.get_node("nvnode3").qmemory.peek(1)[0]
-				carbon_1 = self.network.get_node("nvnode0").qmemory.peek(3)[0]
-				carbon_2 = self.network.get_node("nvnode1").qmemory.peek(3)[0]
-				carbon_3 = self.network.get_node("nvnode0").qmemory.peek(4)[0]
-				carbon_4 = self.network.get_node("nvnode1").qmemory.peek(4)[0]
+				# carbon_1 = self.network.get_node("nvnode0").qmemory.peek(3)[0]
+				# carbon_2 = self.network.get_node("nvnode1").qmemory.peek(3)[0]
+				# carbon_3 = self.network.get_node("nvnode0").qmemory.peek(4)[0]
+				# carbon_4 = self.network.get_node("nvnode1").qmemory.peek(4)[0]
 				if items[1] == 'surface':
 					# rotation_angle = float(items[2])
 					# rotation_phase = float(items[3])
-					rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
-					rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
+					# rotation_angle = float(items[2]) if items[2][0].isdigit() else self.controller.register_dict[items[2]]
+					# rotation_phase = float(items[3]) if items[3][0].isdigit() else self.controller.register_dict[items[3]]
 					
-					cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
-					sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					# cos_value = np.cos(rotation_angle/2)**2/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
+					# sin_value = np.sin(rotation_angle/2)**2*(np.cos(rotation_phase)+1j*np.sin(rotation_phase))/(np.sqrt(np.cos(rotation_angle/2)**4+np.sin(rotation_angle/2)**4))/(np.sqrt(2))
 					# upper_line = [0.5]+[0]*14+[0.5]
-					print(f"the values for the matrix are {cos_value} and {sin_value}")
+					# print(f"the values for the matrix are {cos_value} and {sin_value}")
 					# middle_line = [0]*16
 					# middle_value_line = [0]
 					# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
-					perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
+					# perfect_state = np.array([cos_value, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
 					# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
-					q0,q1,q2,q3 = create_qubits(4)
-					assign_qstate([q0,q1,q2,q3],perfect_state)
-					carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
-					self.network.qubit_total += carbon_matrix
-					q4,q5,q6,q7 = create_qubits(4)
-					assign_qstate([q4,q5,q6,q7],carbon_matrix)
-					fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
+					# q0,q1,q2,q3 = create_qubits(4)
+					# assign_qstate([q0,q1,q2,q3],perfect_state)
+					qubit_store_list = []
+					# print(int((len(items)-2)/2)+2)
+					# print(range(2,int(len(items)+1),2))
+					for i in range(2,int((len(items))),2):
+						# print(i)
+						# print(f"the value of i is {i} with node nvnode {str(items[i][1:])}")
+						qubit_store_list.append(self.network.get_node("nvnode"+str(items[i][1:])).qmemory.peek(int(items[i+1]))[0])
+						# i +=1
+					# carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
+					# print(qubit_store_list)
+					qubit_matrix = reduced_dm(qubit_store_list)
+					# self.network.qubit_total += carbon_matrix
+					self.network.qubit_store = qubit_matrix
+					# self.network.qubit_total += qubit_matrix 
+
+					# q4,q5,q6,q7 = create_qubits(4)
+					# assign_qstate([q4,q5,q6,q7],carbon_matrix)
 					# fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
-					self.controller.register_dict["fidelity"].append(fidelity_value)
+					# # fidelity_value = fidelity([carbon_1,carbon_2, carbon_3, carbon_4],q0.qstate.qrepr)
+					# self.controller.register_dict["fidelity"].append(fidelity_value)
 					# print(f"the perfect state is {perfect_state}")
-					print(f"the state of the qubit is {q0.qstate.qrepr}")
-					print(f"the state of the qubit is {carbon_matrix}")
-					print(f"the fidelity value is {fidelity_value}")
+					# print(f"the state of the qubit is {q0.qstate.qrepr}")
+					# print(f"the state of the qubit is {qubit_matrix}")
+					# print(f"the fidelity value is {fidelity_value}")
 			elif items[0] == 'fidelity_calc':
 				upper_line = [0.5]+[0]*14+[0.5]
 				middle_line = [0]*16
