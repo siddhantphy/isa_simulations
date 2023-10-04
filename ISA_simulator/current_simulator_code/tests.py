@@ -211,10 +211,10 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
 		memory_values["parameters"] = parameter_dict
-		# zeros = [0+0j]*16
+		zeros = [0+0j]*16
 		# print(f"qubit store next {network.qubit_store}")
 		qubit_state = []
-		if network.qubit_store.all() != None:
+		if network.qubit_store.any() != 0:
 			for values in network.qubit_store:
 				qubit_intermediate = []
 				for items in values:
