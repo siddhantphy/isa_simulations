@@ -57,7 +57,7 @@ class Global_cont_Protocol(Protocol):
 		self.clk = clk
 		zeros = [0+0j]*16
 		self.network.qubit_total = np.diag(zeros)
-		self.network.qubit_store = None
+		self.network.qubit_store = np.diag(zeros)
 		self.controller.register_dict["fidelity"] = []
 		self.clk_cycles = self.controller.clk_cycle_dict
 		self.clk_flag = 0
