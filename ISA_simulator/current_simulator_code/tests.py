@@ -211,6 +211,19 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
 		memory_values["parameters"] = parameter_dict
+		# zeros = [0+0j]*16
+		# print(f"qubit store next {network.qubit_store}")
+		qubit_state = []
+		if network.qubit_store.all() != None:
+			for values in network.qubit_store:
+				qubit_intermediate = []
+				for items in values:
+					qubit_intermediate.append(str(items))
+				# print(values)
+				# print(qubit_intermediate)
+				qubit_state.append(qubit_intermediate)
+			# qubit_state = [str(x) for x in network.qubit_store]
+			memory_values["qubit_state"] = qubit_state
 		data_storer(memory_values,data_stored_name+".json")
 		
 	# counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
