@@ -77,86 +77,12 @@ def create_cardinal_states_distance_2():
 _, logical_states_dist_2 = create_cardinal_states_distance_2()
 
 
-
-
-
-
-def create_analytical_logical_PTM(node_A: Node, node_B, operation: str = "NA", iterations: int = 10, post_select: bool = True):
-    """ Construct the Logical Pauli Transfer matrix (LPTM 4 X 4 matrix) using state tomography techniques in the codespace! """
-
-    p_0 = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="0_L", operation=operation, iterations=iterations, post_select=post_select)
-    p_1 = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="1_L", operation=operation, iterations=iterations, post_select=post_select)
-    p_plus = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="+_L", operation=operation, iterations=iterations, post_select=post_select)
-    p_minus = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="-_L", operation=operation, iterations=iterations, post_select=post_select)
-    p_i_plus = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="+i_L", operation=operation, iterations=iterations, post_select=post_select)
-    p_i_minus = get_analytical_logical_PTM_entries(node_A=node_A, node_B=node_B, input_state="-i_L", operation=operation, iterations=iterations, post_select=post_select)
-
-    lptm = np.identity(4)
-
-    lptm[0, 0] = 1
-    lptm[0, 1] = lptm[0, 2] = lptm[0, 3] = 0
-    lptm[1, 1] = 0.5 * (p_plus[0] - p_minus[0])
-    lptm[2, 2] = 0.5 * (p_i_plus[1] - p_i_minus[1])
-    lptm[3, 3] = 0.5 * (p_0[2] - p_1[2])
-    lptm[1, 0] = 0.5 * (p_0[0] + p_1[0])
-    lptm[2, 0] = 0.5 * (p_0[1] + p_1[1])
-    lptm[3, 0] = 0.5 * (p_0[2] + p_1[2])
-    lptm[2, 1] = 0.5 * (p_plus[1] - p_minus[1])
-    lptm[3, 1] = 0.5 * (p_plus[2] - p_minus[2])
-    lptm[1, 2] = 0.5 * (p_i_plus[0] - p_i_minus[0])
-    lptm[3, 2] = 0.5 * (p_i_plus[2] - p_i_minus[2])
-    lptm[1, 3] = 0.5 * (p_0[0] - p_1[0])
-    lptm[2, 3] = 0.5 * (p_0[1] - p_1[1])
-
-    return lptm
-    
-    
-    
-    
-    
-    
-    
-def get_analytical_logical_PTM_entries(node_A: Node, node_B, input_state: str = "NA", operation: str = "NA", iterations: int = 10, post_select: bool = True):
-    """ Get the average entries for LPTM by doing muktiple ierations. Functionality for post-selection whe needed! """
-    p = [0, 0, 0]
-    trashed = 0
-    for trial in range(iterations):
-        ### already performed in txt file
-        # perform_first_stabilizer_measurements(node_A=node_A, node_B=node_B, state=input_state)
-        # apply_logical_operation(node_A=node_A, node_B=node_B, operation=operation)
-        # meas_res = perform_all_stabilizers(node_A=node_A, node_B=node_B)
-        ### end of stabilizer, already done in txt file
-        
-        meas_res = 0 #values needed from the txt file
-        if post_select == True:
-            if (meas_res[0]==0 and meas_res[1]==0) and (meas_res[2]==meas_res[3]):
-                r_logical = get_analytical_logical_expectation_values(node_A=node_A, node_B=node_B)
-                p[0] += r_logical[0]
-                p[1] += r_logical[1]
-                p[2] += r_logical[2]
-            else:
-                trashed += 1
-        else:
-            r_logical = get_analytical_logical_expectation_values(node_A=node_A, node_B=node_B)
-            p[0] += r_logical[0]
-            p[1] += r_logical[1]
-            p[2] += r_logical[2]
-    p[0] = p[0]/(iterations - trashed)
-    p[1] = p[1]/(iterations - trashed)
-    p[2] = p[2]/(iterations - trashed)
-
-    return p
-
-
-
-
-
-def get_analytical_logical_expectation_values(node_A: Node, node_B: Node):
+def get_analytical_logical_expectation_values(qubit_matrix = None):
     """ To calculate all the expectation values {I_L, X_L, Y_L, Z_L} logical Pauli operatos. """
 
     r_logical = [0, 0, 0]
     #rho logical will be taken from our txt file
-    rho_logical = 0
+    rho_logical = qubit_matrix
     # rho_logical = get_instantaneous_data_qubit_density_matrix([node_A, node_B])
 
     # print(np.real(np.trace(logical_states_dist_2[0] @ rho_logical)))

@@ -279,7 +279,7 @@ class Global_cont_Protocol(Protocol):
 					# gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 					gen_rate = np.random.binomial(1,1/100)
 					counter +=1
-				print(f"the counter value is {counter}")
+				# print(f"the counter value is {counter}")
 				# while gen_rate !=1:
 				# 	gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 				# 	counter +=1
@@ -569,6 +569,7 @@ class Global_cont_Protocol(Protocol):
 					# print(qubit_store_list)
 					qubit_matrix = reduced_dm(qubit_store_list)
 					np.trace(qubit_matrix)
+					print('sup')
 					# self.network.qubit_total += carbon_matrix
 					self.network.qubit_store = qubit_matrix
 					# self.network.qubit_total += qubit_matrix 
@@ -585,9 +586,28 @@ class Global_cont_Protocol(Protocol):
 			elif items[0] == "logical_analysis":
 				#call function create_analytical_logcial_PTM
 				#pass on qubit matrix
-				qubit_matrix = self.network.qubit_store
-				p = get_analytical_logical_expectation_values(qubit_matrix)
+				# print("hello i have succes")
+				qubit_store_list = []
+					# print(int((len(items)-2)/2)+2)
+					# print(range(2,int(len(items)+1),2))
+				for i in range(1,int((len(items))),2):
+					# print(i)
+					# print(f"the value of i is {i} with node nvnode {str(items[i][1:])}")
+					qubit_store_list.append(self.network.get_node("nvnode"+str(items[i][1:])).qmemory.peek(int(items[i+1]))[0])
+					# i +=1
+				# carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
+				# print(qubit_store_list)
+				qubit_matrix = reduced_dm(qubit_store_list)
+				np.trace(qubit_matrix)
+				# print('sup')
+				# self.network.qubit_total += carbon_matrix
+				# self.network.qubit_store = qubit_matrix
+				# qubit_matrix = self.network.qubit_store
+				p = np.real(get_analytical_logical_expectation_values(qubit_matrix))
 				# self.network.p_value = p
+				p = [p[0],p[1],p[2]]
+				# print(p)
+				# np.array(p)
 				self.controller.memory["P_value".lower()] = p
 
 			elif items[0] == 'fidelity_calc':

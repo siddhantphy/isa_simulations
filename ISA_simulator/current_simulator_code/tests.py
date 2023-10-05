@@ -8,6 +8,7 @@ from netsquid.qubits.qformalism import QFormalism, set_qstate_formalism
 import json
 import os
 import time
+import pandas as pd
 import itertools
 import sys # in order to take command line inputs
 from multiprocessing import Pool
@@ -289,7 +290,9 @@ def data_storer(data,store_name):
 	# fileopener = '/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/'+filename
 	with open(fileopener, 'w') as file_object:
 		json.dump(data, file_object)
-
+	# print(f"the data is {data}")
+	# data_send = pd.DataFrame(data)
+	# data_send.to_json(fileopener)
 def printer(network):
 	
 	# Set the print precision of the density matrices, this is added for clarity.
