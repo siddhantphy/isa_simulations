@@ -55,7 +55,6 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement_multiple_rotations.txt'
 		filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
-		filename = 'logical_hadamard_gate_fidelity.txt'
 
 		# filename = 'ramsey_fringe_c13.txt'
 		# filename = 'clk_test.txt'
@@ -74,7 +73,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		# filename = "Extra_test_2.txt"
+		filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
@@ -282,14 +281,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 def data_storer(data,store_name):
 	path = os.path.realpath(__file__)
 	dir = os.path.dirname(path)
-	print(dir)
 	dir = dir.replace('current_simulator_code', 'json_data_storage')
 	# save_direct = d.chdir("..")'
 	filename = store_name
 	fileopener = dir+"//" +filename
 	# fileopener = '/workspaces/Thesis/ISA_simulator/json_data_storage/'+filename
 	# fileopener = '/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/'+filename
-	print(fileopener)
 	with open(fileopener, 'w') as file_object:
 		json.dump(data, file_object)
 
@@ -409,7 +406,7 @@ if __name__ == "__main__":
 	if len(sys.argv) == 1:
 		main(node_number = 2,qubit_number=3, printstates=True, detuning = 1e3, electron_T2= 5e3, carbon_T2 = 5e6 ,single_instruction = False, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 10e6)
 	elif sys.argv[1] == "noiseless":
-		main(node_number = 2,qubit_number=5, noiseless = True, printstates=True, detuning = 0, electron_T2= 5e3, carbon_T2 = 56e6 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
+		main(node_number = 2,qubit_number=5, printstates=True, detuning = 0, electron_T2= 5e3, carbon_T2 = 56e6 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
 		# duration_list.append(time.perf_counter() - start_time)
 		#carbon decoherence time is taken from paper sent by nic
 		# with open("/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:

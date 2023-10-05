@@ -4,6 +4,7 @@ from netsquid.components.instructions import INSTR_X, INSTR_Y, INSTR_Z
 from netsquid.protocols import  Protocol, Signals
 import numpy as np
 import math
+from Hardware_to_logical_computations import get_analytical_logical_expectation_values
 from math import pi
 from netsquid.qubits.qubitapi import *
 from NVPrograms import Programs_microwave
@@ -567,6 +568,7 @@ class Global_cont_Protocol(Protocol):
 					# carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
 					# print(qubit_store_list)
 					qubit_matrix = reduced_dm(qubit_store_list)
+					np.trace(qubit_matrix)
 					# self.network.qubit_total += carbon_matrix
 					self.network.qubit_store = qubit_matrix
 					# self.network.qubit_total += qubit_matrix 
@@ -580,6 +582,14 @@ class Global_cont_Protocol(Protocol):
 					# print(f"the state of the qubit is {q0.qstate.qrepr}")
 					# print(f"the state of the qubit is {qubit_matrix}")
 					# print(f"the fidelity value is {fidelity_value}")
+			elif items[0] == "logical_analysis":
+				#call function create_analytical_logcial_PTM
+				#pass on qubit matrix
+				qubit_matrix = self.network.qubit_store
+				p = get_analytical_logical_expectation_values(qubit_matrix)
+				# self.network.p_value = p
+				self.controller.memory["P_value".lower()] = p
+
 			elif items[0] == 'fidelity_calc':
 				upper_line = [0.5]+[0]*14+[0.5]
 				middle_line = [0]*16
