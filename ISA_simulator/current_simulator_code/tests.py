@@ -55,7 +55,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement_multiple_rotations.txt'
-		filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
+		# filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
 
 		# filename = 'ramsey_fringe_c13.txt'
 		# filename = 'clk_test.txt'
@@ -74,11 +74,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		filename = "Extra_test_2.txt"
+		# filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
+		filename = 'Logical_hadamard_gate_fidelity.txt'
 	else:
 		filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
@@ -211,6 +212,10 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
 		memory_values["parameters"] = parameter_dict
+		if len(sys.argv) >1:
+			memory_values["noiseless"] = True
+		else:
+			memory_values["noiseless"] = False
 		zeros = [0+0j]*16
 		# print(f"qubit store next {network.qubit_store}")
 		qubit_state = []
