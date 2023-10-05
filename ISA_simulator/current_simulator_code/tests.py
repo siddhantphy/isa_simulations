@@ -55,7 +55,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_2_photonentanglement.txt'
 		# filename = 'Surface-7_fault_tolerance_1_photonentanglement_multiple_rotations.txt'
-		# filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
+		filename = 'Surface-7_fault_tolerance_2_photonentanglement_multiple_rotations.txt'
 
 		# filename = 'ramsey_fringe_c13.txt'
 		# filename = 'clk_test.txt'
@@ -74,12 +74,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		# filename = "Extra_test_2.txt"
+		filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
-		filename = 'Logical_hadamard_gate_fidelity.txt'
+		# filename = 'Logical_hadamard_gate_fidelity.txt'
 	else:
 		filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
@@ -208,14 +208,18 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	memory_values = {}
 	if line_reader[-2].split()[0].lower() == "DataStorageName".lower():
 		data_stored_name = line_reader[-2].split()[1]
+
+		if len(sys.argv) >1:
+			memory_values["noiseless"] = True
+			data_stored_name = line_reader[-2].split()[1]
+			data_stored_name = data_stored_name+'_noiseless'
+		else:
+			memory_values["noiseless"] = False
+			data_stored_name = data_stored_name+'_noisefull'
 	if line_reader[-1].split()[0].lower() == "OutputStore".lower():
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
 		memory_values["parameters"] = parameter_dict
-		if len(sys.argv) >1:
-			memory_values["noiseless"] = True
-		else:
-			memory_values["noiseless"] = False
 		zeros = [0+0j]*16
 		# print(f"qubit store next {network.qubit_store}")
 		qubit_state = []
@@ -229,6 +233,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 				qubit_state.append(qubit_intermediate)
 			# qubit_state = [str(x) for x in network.qubit_store]
 			memory_values["qubit_state"] = qubit_state
+
 		data_storer(memory_values,data_stored_name+".json")
 		
 	# counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
