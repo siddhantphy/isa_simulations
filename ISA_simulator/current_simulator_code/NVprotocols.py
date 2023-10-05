@@ -62,6 +62,7 @@ class Global_cont_Protocol(Protocol):
 		self.controller.register_dict["fidelity"] = []
 		self.clk_cycles = self.controller.clk_cycle_dict
 		self.clk_flag = 0
+		self.controller.memory["P_value".lower()] = []
 
 		for i in range(len(self.network.nodes)-1):
 			self.add_subprotocol(Global_data_Protocol(network,"nvnode"+str(i)), "Global_data_protocol_nvnode"+str(i))
@@ -603,12 +604,14 @@ class Global_cont_Protocol(Protocol):
 				# self.network.qubit_total += carbon_matrix
 				# self.network.qubit_store = qubit_matrix
 				# qubit_matrix = self.network.qubit_store
+				# p_store = []
 				p = np.real(get_analytical_logical_expectation_values(qubit_matrix))
 				# self.network.p_value = p
 				p = [p[0],p[1],p[2]]
+				# self.p_store.append(p)
 				# print(p)
 				# np.array(p)
-				self.controller.memory["P_value".lower()] = p
+				self.controller.memory["P_value".lower()].append(p)
 
 			elif items[0] == 'fidelity_calc':
 				upper_line = [0.5]+[0]*14+[0.5]
