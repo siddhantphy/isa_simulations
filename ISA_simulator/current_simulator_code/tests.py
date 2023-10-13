@@ -74,12 +74,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		# filename = "Extra_test_2.txt"
+		filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
-		filename = 'Logical_hadamard_gate_fidelity.txt'
+		# filename = 'Logical_hadamard_gate_fidelity.txt'
 	else:
 		filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
@@ -156,6 +156,9 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	
 	# Setup the network by calling the network setup function
 	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
+	network.noiseless = noiseless
+	network.noise_parameters = {}
+	network.noise_parameters["T2_carbon"] = carbon_T2
 	# prog_copy_for_check = line_reader
 	# print('first check in progcopy')
 	# print(line_reader)

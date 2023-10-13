@@ -1,6 +1,7 @@
 from netsquid.components import QuantumProgram, INSTR_ROT, INSTR_CROT, INSTR_ROT_Z
 from math import atan, sin, cos
 import numpy as np
+from operator import add
 import math
 from netsquid.qubits.operators import Operator
 from netsquid.components.instructions import IGate
@@ -10,7 +11,10 @@ class Programs_microwave(QuantumProgram):
 		super().__init__()
 		self.prog_name = prog_name # In this program name, the instruction which needs to be performed is stored
 		self.diamond = diamond # The diamond is needed, because properties of the qubits are needed to know how far the rotations need to be done 
-		self.ext_magnet = diamond.supercomponent.supercomponent.subcomponents["external_magnet"] # The external magnetic field is needed in order to calculate the resonance frequency
+		self.network = network = diamond.supercomponent.supercomponent
+		# print('the network is printed next')
+		# print(self.network)
+		self.ext_magnet = network.subcomponents["external_magnet"] # The external magnetic field is needed in order to calculate the resonance frequency
 		self.no_z = no_z # This is a parameter which determines if a z spin precission is wanted (this can be used to turn off unwanted rotations for testing purposes)
 		self.microwave = diamond.supercomponent.subcomponents["microwave"] # The microwave component is needed, because it contains information regarding the microwave shape and oscillating magnitude
 		self.detuning = detuning
@@ -27,8 +31,11 @@ class Programs_microwave(QuantumProgram):
 		# Zero field splitting of the electron ms = -1,1 states with regards to the ms = 0 state. 
 		# This is the resonance frequency when there is no magnetic field present
 		D = 2.87e9  #Hz
-
+		decoherence_value = self.network.noise_parameters["T2_carbon"]
+		carbon_detuning_decoherence_based = 0 if self.network.noiseless == True else 1/(2*np.pi*decoherence_value)
+		carbon_jitter_detuning = np.random.rand(len(self.diamond.supercomponent.subcomponents["local_controller"].carbon_frequencies))*carbon_detuning_decoherence_based-carbon_detuning_decoherence_based/2
 		N_state_p0 = abs(self.N_state[0][0])
+		# print(decoherence_value)
 		N_state_p1 = abs(self.N_state[1][1])
 		N_state_effect = np.random.binomial(1,N_state_p1)
   
@@ -115,6 +122,8 @@ class Programs_microwave(QuantumProgram):
 					# print(f"alpha is {alpha}")
 					elec_freq = self.diamond.supercomponent.subcomponents["local_controller"].elec_freq_reg
 					carbon_frequencies = self.diamond.supercomponent.subcomponents["local_controller"].carbon_frequencies
+					# print(f"the length of the two lists are {len(carbon_jitter_detuning)} and {len(carbon_frequencies)}")
+					carbon_frequencies = list(map(add,carbon_frequencies,carbon_jitter_detuning))
 					total_freq = elec_freq+carbon_frequencies
 					# print(f"the carbon frequencies are {total_freq}")
 					total_substracted = [np.abs(np.abs(value) - omega_rf) for value in total_freq]

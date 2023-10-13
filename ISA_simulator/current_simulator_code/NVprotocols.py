@@ -3,6 +3,9 @@ import netsquid as ns
 from netsquid.components.instructions import INSTR_X, INSTR_Y, INSTR_Z
 from netsquid.protocols import  Protocol, Signals
 import numpy as np
+from noise_models import DephasingNoiseModelCarbon
+from netsquid.components.instructions import IGate
+from netsquid.qubits.qubitapi import dephase
 import math
 from Hardware_to_logical_computations import get_analytical_logical_expectation_values
 from math import pi
@@ -175,6 +178,16 @@ class Global_cont_Protocol(Protocol):
 				node1 = self.network.get_node(items[1]) 
 				print(f"printing the state of node {items[1]} qubit {items[2]} due to printstate statement")
 				print(node1.qmemory.peek(int(items[2]))[0].qstate.qrepr)
+				qubit_store_list = []
+					# print(int((len(items)-2)/2)+2)
+					# print(range(2,int(len(items)+1),2))
+				for i in range(1,int((len(items))),2):
+					# print(i)
+					# print(f"the value of i is {i} with node nvnode {str(items[i][1:])}")
+					qubit_store_list.append(self.network.get_node("nvnode"+str(items[i][1:])).qmemory.peek(int(items[i+1]))[0])
+					# i +=1
+				qubit_matrix = reduced_dm(qubit_store_list)
+				print(qubit_matrix)
 			
 
 			elif items[0] == "state_inject_ghz_2":
@@ -252,7 +265,7 @@ class Global_cont_Protocol(Protocol):
 			elif items[0] == "nventangle_real": #link paper here
 				Nodes = [self.network.get_node(items[1]), self.network.get_node(items[2])]
 				electrons = []
-
+				
 				# Add electrons of the nodes to the list
 				for items_node in Nodes:
 					electrons.append(items_node.qmemory.peek(0)[0])
@@ -270,7 +283,7 @@ class Global_cont_Protocol(Protocol):
 				p_det_A = 3.6e-4
 				p_det_B = 4.4e-4
 				p_dc = 1.5e-7
-				V = 1
+				V = 0.9
 				plusmin = 0
 				counter = 0
 				gen_rate = 0
@@ -284,7 +297,9 @@ class Global_cont_Protocol(Protocol):
 				# while gen_rate !=1:
 				# 	gen_rate = np.random.binomial(1,2*alpha_A*p_det_A)
 				# 	counter +=1
-				charge_state_fail = np.random.binomial(1,0)
+				charge_state_fail_NV0 = np.random.binomial(1,0)
+				charge_state_fail_NV1 = np.random.binomial(1,0)
+
 				# print(f"the charge state fail is {charge_state_fail}")
 				# if charge_state_fail:
 					# entangle_create()
@@ -298,24 +313,50 @@ class Global_cont_Protocol(Protocol):
 				p_tot = p00+p01+p10+p11
 				electron_entangled_state = np.array([[p00/p_tot,0,0,0],[0,p01/p_tot,plusmin*np.sqrt(V*p01*p10)/p_tot,0],[0,plusmin*np.sqrt(V*p01*p10)/p_tot,p10/p_tot,0],[0,0,0,p11/p_tot]])
 				zeroline = [0]*4
-				if charge_state_fail == 1:
-					pass
-				else:
-					operation_duration_time = 5555.55*counter #5555.55 comes from 2.5(ms)/450(entanglement attempts) look at the paper
-					# print(f"the operation duration time is {operation_duration_time}")
-					time_message_to_NV_centers = ['wait', operation_duration_time]
-					port_out_1 = self.controller.ports["Out_nvnode0"]
-					port_out_2 = self.controller.ports["Out_nvnode1"]
-					port_out_1.tx_output(time_message_to_NV_centers)
-					port_out_2.tx_output(time_message_to_NV_centers)
-					# print('do i see this')
-					evt_wait_port_1 = self.await_port_input(port_out_1)
-					evt_wait_port_2 = self.await_port_input(port_out_2)
-					yield evt_wait_port_2 and evt_wait_port_1
+
+				## calculate dephasing noise
+				# dephasing_noise = alpha_A / 2 * (1 - np.exp(-(2 * np.pi * dw * td * 10 ** (-6)) ** 2 / 2))
+
+				if self.network.noiseless:
 					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
 					# print(f"the qubit state is {electron_GHZ}")
-					assign_qstate(electrons, electron_GHZ)
-					yield self.await_timer(1)
+					assign_qstate(electrons, electron_entangled_state)
+				else:
+					if charge_state_fail_NV0 == 1:
+						self.network.get_node(items[1]).subcomponents["nv_center_quantum_processor"].NV_state = "NV0"
+					if charge_state_fail_NV1 == 1:
+						self.network.get_node(items[2]).subcomponents["nv_center_quantum_processor"].NV_state = "NV0"
+					if (charge_state_fail_NV0 == 0 and charge_state_fail_NV1 == 0):
+						operation_duration_time = 5555.55*counter #5555.55 comes from 2.5(ms)/450(entanglement attempts) look at the paper
+						# print(f"the operation duration time is {operation_duration_time}")
+						time_message_to_NV_centers = ['wait', operation_duration_time]
+						port_out_1 = self.controller.ports["Out_nvnode0"]
+						port_out_2 = self.controller.ports["Out_nvnode1"]
+						port_out_1.tx_output(time_message_to_NV_centers)
+						port_out_2.tx_output(time_message_to_NV_centers)
+						# print('do i see this')
+						evt_wait_port_1 = self.await_port_input(port_out_1)
+						evt_wait_port_2 = self.await_port_input(port_out_2)
+						yield evt_wait_port_2 and evt_wait_port_1
+						# print(f"the qubit state is {electron_GHZ}")
+						
+						assign_qstate(electrons, electron_entangled_state)
+						diamond = self.network.get_node(items[1]).subcomponents["nv_center_quantum_processor"]
+						# for k in range(len(diamond.mem_positions)-2): #-2 because there is a memory position for the electron and an additional one for a photon emission (only needed for mathmetical perposes)
+						# The iterater value skips the value for the electron position
+							
+							# iterater_value = k+1
+						delta_w = 0
+						tau_decay = 0
+						p_deph = (1 - alpha_A) / 2 * (1 - np.exp(-(delta_w * tau_decay) ** 2 / 2))
+						error_model = DephasingNoiseModelCarbon(prob_of_dephasing=p_deph)
+						# number_of_attempts = NVSingleClickMagicDistributor._get_number_of_attempts(delivery)
+						carbon_qubits = [diamond.peek(carbon_iterator_value) for carbon_iterator_value in range(len(diamond.mem_positions)-2)]
+						error_model.noise_operation_own(
+							qubits=carbon_qubits,
+							number_of_applications=counter,
+							diamond = diamond)
+						# yield self.await_timer(1)
 					# assign_qstate(electrons, electron_GHZ)
 
 					
@@ -326,13 +367,7 @@ class Global_cont_Protocol(Protocol):
 				
 				# yield self.await_port_input(port_out_1)
 				# yield self.await_port_input(port_out_2)
-				# print('does it end here?')
-
-
-				# upper_line_1 = [0]*5+[0.5]+[0]*4+[0.5]+[0]*5
-				# perfect_state = np.array([0.5, 0, 0,0, 0, sin_value,0, 0, 0,0, sin_value,0, 0, 0,0, cos_value])#.astype(np.float64)
-				# dz_perfect_0 = np.array([upper_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,middle_line,upper_line]).astype(np.float64)
-				# print(f"the injected state is {electron_GHZ}")
+				
     
 			elif items[0] == "ghz_setter_2n" or items[0] == "nventangle":
 				# Get the nodes for which the GHZ states needs to be set
