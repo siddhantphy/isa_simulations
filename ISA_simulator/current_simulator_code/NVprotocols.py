@@ -175,9 +175,9 @@ class Global_cont_Protocol(Protocol):
 			elif items[0] == "printstate":
 				np.set_printoptions(precision=2, suppress = True)
 
-				node1 = self.network.get_node(items[1]) 
-				print(f"printing the state of node {items[1]} qubit {items[2]} due to printstate statement")
-				print(node1.qmemory.peek(int(items[2]))[0].qstate.qrepr)
+				# node1 = self.network.get_node(items[1]) 
+				# print(f"printing the state of node {items[1]} qubit {items[2]} due to printstate statement")
+				# print(node1.qmemory.peek(int(items[2]))[0].qstate.qrepr)
 				qubit_store_list = []
 					# print(int((len(items)-2)/2)+2)
 					# print(range(2,int(len(items)+1),2))
