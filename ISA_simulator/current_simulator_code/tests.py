@@ -74,12 +74,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		filename = "Extra_test_2.txt"
+		# filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
-		# filename = 'Logical_hadamard_gate_fidelity.txt'
+		filename = 'Logical_hadamard_gate_fidelity.txt'
 	else:
 		filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
