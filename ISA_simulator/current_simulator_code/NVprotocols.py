@@ -316,7 +316,6 @@ class Global_cont_Protocol(Protocol):
 
 				## calculate dephasing noise
 				# dephasing_noise = alpha_A / 2 * (1 - np.exp(-(2 * np.pi * dw * td * 10 ** (-6)) ** 2 / 2))
-
 				if self.network.noiseless:
 					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
 					# print(f"the qubit state is {electron_GHZ}")
@@ -351,7 +350,7 @@ class Global_cont_Protocol(Protocol):
 						p_deph = (1 - alpha_A) / 2 * (1 - np.exp(-(delta_w * tau_decay) ** 2 / 2))
 						error_model = DephasingNoiseModelCarbon(prob_of_dephasing=p_deph)
 						# number_of_attempts = NVSingleClickMagicDistributor._get_number_of_attempts(delivery)
-						carbon_qubits = [diamond.peek(carbon_iterator_value) for carbon_iterator_value in range(len(diamond.mem_positions)-2)]
+						carbon_qubits = [diamond.peek(carbon_iterator_value) for carbon_iterator_value in range(1,len(diamond.mem_positions)-2)]
 						error_model.noise_operation_own(
 							qubits=carbon_qubits,
 							number_of_applications=counter,
