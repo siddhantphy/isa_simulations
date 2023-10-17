@@ -4,6 +4,7 @@ from NVNetwork_setup import network_setup
 from netsquid.qubits.qubitapi import *
 import numpy as np
 from NVprotocols import *
+from multiprocessing import Process, Queue, Pool, cpu_count
 from netsquid.qubits.qformalism import QFormalism, set_qstate_formalism
 import json
 import os
@@ -15,11 +16,12 @@ from multiprocessing import Pool
 
 set_qstate_formalism(QFormalism.DM)
 
-def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = False, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False):
+def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = False, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False, **kwargs):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
-
+	print(kwargs)
+	
 	print(f"the number of nodes is {node_number} with qubits {qubit_number}")
 	print(f"savename is {savename}")
 	if savename != None:
@@ -80,8 +82,10 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
 		# filename = 'Logical_hadamard_gate_fidelity.txt'
+		filename = 'logical_hadamard_gate_fidelity.txt'
 	else:
-		filename = filename + '.txt'
+		filename = filename[0] #fix later
+		# filename = filename + '.txt'
 	# The text file with proposed filename is opened and the information is stored in parameter 'lines'
 	# d = os.getcwd().parents[1]
 	#parameters are read in the following line
@@ -121,6 +125,22 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 			lines.insert(2*i+3,'SwapEC q0 ' +str(i+1) )
 			lines.insert(2*i+4+2*(i+1),'QgateCC q0 '+str(i+1)+' 0 3.14')
 		print(lines)
+	elif filename == 'logical_hadamard_gate_fidelity.txt':
+		# for i in range(len(lines)):
+			# print('before i am here')
+			# print(f'checking lines {lines[i]}')
+			# print('i am here')
+			# if lines[i][-1] == "iterations":
+				# print('i am in here')
+		for i in range(len(lines)):
+			if lines[i] != '\n':
+				if lines[i].split()[0] == "LDi":
+					if lines[i].split()[-1] == 'Iterations':
+						lines.insert(i,'LDi '+str(kwargs["iterations"])+ ' Iterations')
+						lines.pop(i+1)
+		# print(lines)
+
+
 		
 	# Loop through every instruction
 	for i in range(len(lines)):
@@ -287,7 +307,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_photonentanglement_decoherence_detuning_dmrep_latest"+str(savename)+"_100meas.json")
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_dmrep_latest_100meas_intialisation.json")
-
+	return memory_values
 
 	
 	
@@ -389,7 +409,160 @@ def printer(network):
 	
 	# print(reduced_dm([carbon,carbon_2,carbon_3,carbon_4]))
 
+def run_multiprocess(
+	# code: code_type,
+	# decoder: decoder_type,
+	# error_rates: dict = {},
+	iterations: int = 1,
+	QISA_file = None,
+	# decode_initial: bool = True,
+	# seed: Optional[float] = None,
+	processes = None,
+	# benchmark: Optional[BenchmarkDecoder] = None,
+	# **kwargs,
+	):
+	"""Runs surface code simulation using multiple processes.
+	Using the standard module `.multiprocessing` and its `~multiprocessing.Process` class, several processes are created that each runs its on contained simulation using `run`. The ``code`` and ``decoder`` objects are copied such that each process has its own instance. The total number of ``iterations`` are divided for the number of ``processes`` indicated. If no ``processes`` parameter is supplied, the number of available threads is determined via `~multiprocessing.cpu_count` and all threads are utilized.
+	If a `.BenchmarkDecoder` object is attached to ``benchmark``, `~multiprocessing.Process` copies the object for each separate thread. Each instance of the the decoder thus have its own benchmark object. The results of the benchmark are appended to a list and addded to the output.
+	See `run` for examples on running a simulation.
+	Parameters
+	----------
+	code
+		A surface code instance (see initialize).
+	decoder
+		A decoder instance (see initialize).
+	error_rates
+		Dictionary for error rates (see `~qsurface.errors`).
+	iterations
+		Total number of iterations to run.
+	decode_initial
+		Decode initial code configuration before applying loaded errors.
+	seed
+		Float to use as the seed for the random number generator.
+	processes
+		Number of processes to spawn.
+	benchmark
+		Benchmarks decoder performance and analytics if attached.
+	kwargs
+		Keyword arguments are passed on to every process of run.
+	"""
+	# if hasattr(code, "figure"):
+	#     raise TypeError("Cannot use surface code with plotting enabled for multiprocess.")
+	path = os.path.realpath(__file__)
+	dir = os.path.dirname(path)
+	dir = dir.replace('current_simulator_code', 'QISA_schemes')
+	# save_direct = d.chdir("..")'
+	fileopener = dir+"/" +QISA_file[0]
+	with open(fileopener) as f:
+		lines = f.readlines()
+	for i in range(len(lines)):
+		if lines[i] != '\n':
+			print(lines[i])
+			if lines[i].split()[0] == "LDi":
+				if lines[i].split()[-1] == 'Iterations':
+					print(iterations)
+					iterations = int(lines[i].split()[1])
+	
+	
+	if processes is None:
+		processes = cpu_count()
+	# processes = 2
+	process_iters = iterations // processes
+	print(f'get the process values {processes} with process iters {process_iters}')
+	if process_iters == 0:
+		print("Please select more iterations")
+		return
 
+ 
+
+    # if decode_initial:
+    #     if code.superoperator_enabled:
+   #         code.init_superoperator_errors()
+   #         code.superoperator_random_errors()
+   #     else:
+   #         code.random_errors(**error_rates) #Applying random errors on the current code
+	#     decoder.decode(**kwargs)    
+	#     code.logical_state #Get the current logical state
+	# QISA_file = QISA_file
+
+		# lines.insert(2*i+2,'Initialize q0')
+	# Initiate processes
+	mp_queue = Queue()
+	workers = []
+	for process in range(processes):
+		workers.append(
+			Process(
+				target=main,
+				args=(None,QISA_file),
+				kwargs={
+					"iterations": process_iters,
+					# "decode_initial": False,
+					# "seed": seed,
+					"mp_process": process,
+					"mp_queue": mp_queue,
+					# "error_rates": error_rates,
+					# "benchmark": benchmark,
+					# **kwargs,
+				},
+			)
+		)
+	print("Starting", processes, "workers.")
+
+
+
+	# Start and join processes
+	for worker in workers:
+		worker.start()
+
+ 
+
+	outputs = []
+	for worker in workers:
+		outputs.append(mp_queue.get())
+		worker.join()
+
+
+
+	output = {"P_values": 0}
+
+
+
+	for partial_output in outputs:
+		output["P_values"] += partial_output["P_values"]
+	# if benchmark:
+	#     benchmarks = [partial_output["benchmark"] for partial_output in outputs]
+
+
+
+        # if len(benchmarks) == 1:
+        #     output["benchmark"] = benchmarks[0]
+        # else:
+        #     combined_benchmark = {}
+        #     stats = defaultdict(lambda: {"mean": [], "std": []})
+        #     iterations = []
+        #     for benchmark in benchmarks:
+        #         print(benchmark)
+        #         iterations.append(benchmark["iterations"])
+        #         for name, value in benchmark.items():
+        #             if name[-4:] == "mean":
+        #                 stats[name[:-4]]["mean"].append(value)
+        #             elif name[-3:] == "std":
+        #                 stats[name[:-3]]["std"].append(value)
+        #             else:
+        #                 if type(value) in [int, float] and name in combined_benchmark:
+        #                     combined_benchmark[name] += value
+        #                 else:
+        #                     combined_benchmark[name] = value
+        #     for name, meanstd in stats.items():
+        #         mean, std = _combine_mean_std(meanstd["mean"], meanstd["std"], iterations)
+        #         combined_benchmark[f"{name}mean"] = mean
+        #         combined_benchmark[f"{name}std"] = std
+        #     output["benchmark"] = combined_benchmark
+        # output["benchmark"]["seed"] = seed
+
+ 
+
+	return output
 
 
 if __name__ == "__main__":
@@ -433,6 +606,12 @@ if __name__ == "__main__":
 			arg = [(i,None,2,5,0,False,None,4e-3,2e-3,True,0,5e3,0,0,5e6) for i in range(5)]
 
 			p.starmap(main,arg)
+	elif sys.argv[1] == "supercomputer":
+		iterations = 50
+		QISA_file = ["logical_hadamard_gate_fidelity.txt"]
+		P_value = run_multiprocess(iterations=iterations,QISA_file = QISA_file)
+		# plot_points[size].append((rate, no_error /iterations))
+
 			# duration_list.append(time.perf_counter() - start_time)
 			# with open("/workspaces/Thesis/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:
 			# 		json.dump({"time:":duration_list}, file_object)
