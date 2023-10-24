@@ -32,8 +32,9 @@ class Programs_microwave(QuantumProgram):
 		# This is the resonance frequency when there is no magnetic field present
 		D = 2.87e9  #Hz
 		decoherence_value = self.network.noise_parameters["T2_carbon"]
-		carbon_detuning_decoherence_based = 0 if self.network.noiseless == True else 1/(2*np.pi*decoherence_value)
-		carbon_jitter_detuning = np.random.rand(len(self.diamond.supercomponent.subcomponents["local_controller"].carbon_frequencies))*carbon_detuning_decoherence_based-carbon_detuning_decoherence_based/2
+		T2detuning = self.network.noise_parameters["T2Detuning"]
+		carbon_detuning_decoherence_based = 0 if (T2detuning == True or decoherence_value == 0) else 1/(2*np.pi*decoherence_value) #2*np.pi*
+		carbon_jitter_detuning = np.random.rand(len(self.diamond.supercomponent.subcomponents["local_controller"].carbon_frequencies))*carbon_detuning_decoherence_based-carbon_detuning_decoherence_based/2 #use this value in order to perform the waiting operation with detuning
 		N_state_p0 = abs(self.N_state[0][0])
 		# print(decoherence_value)
 		N_state_p1 = abs(self.N_state[1][1])

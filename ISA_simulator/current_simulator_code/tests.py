@@ -4,24 +4,30 @@ from NVNetwork_setup import network_setup
 from netsquid.qubits.qubitapi import *
 import numpy as np
 from NVprotocols import *
-from multiprocessing import Process, Queue, Pool, cpu_count
+from multiprocessing import Process, Queue, Pool, cpu_count, parent_process
 from netsquid.qubits.qformalism import QFormalism, set_qstate_formalism
 import json
 import os
 import time
+import scipy
+import random
 import pandas as pd
 import itertools
 import sys # in order to take command line inputs
-from multiprocessing import Pool
-
+from multiprocessing import Pool, Manager
+import multiprocessing
 set_qstate_formalism(QFormalism.DM)
 
 def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = False, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False, **kwargs):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
+	np.random.seed(int(kwargs["mp_process"])+10)
+	random.seed(str(os.getpid()) + str(time.time()))
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
-	print(kwargs)
-	
+	print(f" the arguments are {kwargs}")
+	print(f"the kwargs are {kwargs}")
+	if kwargs["seed"] == True:
+		noiseless = True
 	print(f"the number of nodes is {node_number} with qubits {qubit_number}")
 	print(f"savename is {savename}")
 	if savename != None:
@@ -76,7 +82,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "Last_matti_test.txt"
 		# filename = "server_test.txt"
 
-		filename = "Extra_test_2.txt"
+		# filename = "Extra_test_2.txt"
 		# filename = 'test.txt'
 		# filename = 'magnetic_bias.txt'
 		# filename = "test_input_rabi_check.txt"
@@ -156,15 +162,16 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	node_number = int(parameter_dict["NodeNumber"])
 	qubit_number = int(parameter_dict["QubitNumber"])
 	photon_detection_prob = float(parameter_dict["PhotonDetectionProbability"])
-	printstates = bool(parameter_dict["printstates"])
+	printstates = bool(int(parameter_dict["printstates"]))
 	node_distance = float(parameter_dict["NodeDistance"])
 	photo_distance = float(parameter_dict["PhotonDistance"])
 	detuning = float(parameter_dict["Detuning"])
+	T2detuning = bool(int(parameter_dict["T2Detuning"]))
 	electron_T2 = float(parameter_dict["ElectronDecoherence"])
 	electron_T1 = float(parameter_dict["ElectronRelaxation"])
 	carbon_T2 = float(parameter_dict["CarbonDecoherence"])
 	carbon_T1 = float(parameter_dict["CarbonRelaxation"])
-	single_instruction = bool(parameter_dict["Crosstalk"])
+	single_instruction = bool(int(parameter_dict["CrosstalkOff"]))
 	no_z_precission = int(parameter_dict["NoZPrecession"])
 	frame = str(parameter_dict["frame"])
 	wait_detuning = float(parameter_dict["WaitDetuning"])
@@ -172,13 +179,18 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	clk_local = float(parameter_dict["clkLocal"])
 	B_z = float(parameter_dict["StaticField"])
 	rotation_with_pi = int(parameter_dict["RotationWithPi"])
-
+	DephasingEntanglementNoise = bool(int(parameter_dict["DephasingEntanglementNoise"]))
+	NoisyEntangledState = bool(int(parameter_dict["NoisyEntangledState"]))
+	print(f'dephasing parameter in tests {DephasingEntanglementNoise}')
 	
 	# Setup the network by calling the network setup function
 	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
 	network.noiseless = noiseless
 	network.noise_parameters = {}
 	network.noise_parameters["T2_carbon"] = carbon_T2
+	network.noise_parameters["DephasingEntanglementNoise"] = DephasingEntanglementNoise
+	network.noise_parameters["NoisyEntangledState"] = NoisyEntangledState
+	network.noise_parameters["T2Detuning"] = T2detuning
 	# prog_copy_for_check = line_reader
 	# print('first check in progcopy')
 	# print(line_reader)
@@ -233,12 +245,13 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		data_stored_name = line_reader[-2].split()[1]
 
 		if len(sys.argv) >1:
-			memory_values["noiseless"] = True
+			# memory_values["noiseless"] = True
 			data_stored_name = line_reader[-2].split()[1]
 			data_stored_name = data_stored_name+'_noiseless'
 		else:
-			memory_values["noiseless"] = False
+			# memory_values["noiseless"] = False
 			data_stored_name = data_stored_name+'_noisefull'
+		memory_values["noiseless"] = noiseless
 	if line_reader[-1].split()[0].lower() == "OutputStore".lower():
 		for memory in line_reader[-1].split()[1:]:
 			memory_values[memory] = (network.get_node("controller").memory[memory.lower()])
@@ -307,7 +320,12 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_photonentanglement_decoherence_detuning_dmrep_latest"+str(savename)+"_100meas.json")
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_dmrep_latest_100meas_intialisation.json")
-	return memory_values
+	# return_value = kwargs["mp_queue"].get()
+	return_value = {}
+	return_value["values"] = memory_values
+	print(f"the following value will be put {return_value}")
+	kwargs["mp_queue"].put(return_value)
+	# return memory_values
 
 	
 	
@@ -418,8 +436,9 @@ def run_multiprocess(
 	# decode_initial: bool = True,
 	# seed: Optional[float] = None,
 	processes = None,
+	noiseless = None,
 	# benchmark: Optional[BenchmarkDecoder] = None,
-	# **kwargs,
+	**kwargs,
 	):
 	"""Runs surface code simulation using multiple processes.
 	Using the standard module `.multiprocessing` and its `~multiprocessing.Process` class, several processes are created that each runs its on contained simulation using `run`. The ``code`` and ``decoder`` objects are copied such that each process has its own instance. The total number of ``iterations`` are divided for the number of ``processes`` indicated. If no ``processes`` parameter is supplied, the number of available threads is determined via `~multiprocessing.cpu_count` and all threads are utilized.
@@ -466,6 +485,7 @@ def run_multiprocess(
 	
 	if processes is None:
 		processes = cpu_count()
+		processes = 4
 	# processes = 2
 	process_iters = iterations // processes
 	print(f'get the process values {processes} with process iters {process_iters}')
@@ -487,9 +507,20 @@ def run_multiprocess(
 
 		# lines.insert(2*i+2,'Initialize q0')
 	# Initiate processes
-	mp_queue = Queue()
+	# manager = Manager()
+	# return_dict = manager.dict()
 	workers = []
+	mp_ques = []
+	mp_queue = Queue()
+	
+	print(f"the kwargs are {kwargs}")
 	for process in range(processes):
+		print('i made changes')
+		print(f"noiseless value is {noiseless}")
+		mp_ques.append(Queue())
+		# time.sleep(1)
+		# random.seed(str(os.getpid()) + str(time.time()))
+		
 		workers.append(
 			Process(
 				target=main,
@@ -497,12 +528,13 @@ def run_multiprocess(
 				kwargs={
 					"iterations": process_iters,
 					# "decode_initial": False,
-					# "seed": seed,
+					"seed": noiseless,
+					# "noiseless": noiseless,
 					"mp_process": process,
 					"mp_queue": mp_queue,
 					# "error_rates": error_rates,
 					# "benchmark": benchmark,
-					# **kwargs,
+					**kwargs,
 				},
 			)
 		)
@@ -511,24 +543,42 @@ def run_multiprocess(
 
 
 	# Start and join processes
+	# print(f"the workers are {workers}")
+	# print(f"with parent {workers.parent}")
 	for worker in workers:
+		# time.sleep(1)
 		worker.start()
 
- 
-
+	
+	# print('this far we get')
 	outputs = []
+	outputs_second = []
+
+	# for i, worker in enumerate(workers):
+	# 	print(f"the worker values are {mp_ques[i].get()}")
+	# 	outputs.append(mp_ques[i].get())
+	# 	# worker.join()
+	# print(f"the output values are {outputs}")
+	
 	for worker in workers:
-		outputs.append(mp_queue.get())
 		worker.join()
-
-
-
-	output = {"P_values": 0}
+	# print(f" the size is {mp_queue.qsize()}")
+	for i, worker in enumerate(workers):
+		# print(f"the worker values are {mp_ques[i].get()}")
+		values = mp_queue.get()
+		# print(f"the values are {values}")
+		outputs.append(values)
+	print(f"the output values are {outputs}")
+	# print(f"the second outputs are {outputs_second}")
+	output = {"P_values": []}
 
 
 
 	for partial_output in outputs:
-		output["P_values"] += partial_output["P_values"]
+		output["P_values"] += partial_output["values"]["P_value"]
+	output["Noise_parameters"] = outputs[0]["values"]['parameters']
+	output["number_of_cores"] = processes
+	output["number_of_iterations"] = iterations
 	# if benchmark:
 	#     benchmarks = [partial_output["benchmark"] for partial_output in outputs]
 
@@ -566,7 +616,10 @@ def run_multiprocess(
 
 
 if __name__ == "__main__":
+	multiprocessing.set_start_method('spawn')
+
 	# for i in range(1):
+	
 	# 	duration_list = []
 	# 	for j in range(1):
 	# 		start_time = time.time()
@@ -608,8 +661,15 @@ if __name__ == "__main__":
 			p.starmap(main,arg)
 	elif sys.argv[1] == "supercomputer":
 		iterations = 50
+		if len(sys.argv) >2:
+			noiseless_arg = True
+		else:
+			noiseless_arg = False
 		QISA_file = ["logical_hadamard_gate_fidelity.txt"]
-		P_value = run_multiprocess(iterations=iterations,QISA_file = QISA_file)
+		results = run_multiprocess(iterations=iterations,QISA_file = QISA_file, noiseless = noiseless_arg)
+		end_time = time.perf_counter()-start_time
+		results["time_duration"] = end_time
+		data_storer(results,"first_measurement_values_noiseless.json")
 		# plot_points[size].append((rate, no_error /iterations))
 
 			# duration_list.append(time.perf_counter() - start_time)

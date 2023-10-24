@@ -21,6 +21,7 @@ sys.setrecursionlimit(20000)
 import threading
 from netsquid_nv.magic_distributor import NVSingleClickMagicDistributor#, NVDoubleClickMagicDistributor
 threading.stack_size(2**30) # Needed to perform magnetic biasing sequence
+np.random.seed()
 
 class PhotodetectorProtocol(Protocol):
 	def __init__(self, photodetector, p=0.95):
@@ -316,11 +317,7 @@ class Global_cont_Protocol(Protocol):
 
 				## calculate dephasing noise
 				# dephasing_noise = alpha_A / 2 * (1 - np.exp(-(2 * np.pi * dw * td * 10 ** (-6)) ** 2 / 2))
-				if self.network.noiseless:
-					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
-					# print(f"the qubit state is {electron_GHZ}")
-					assign_qstate(electrons, electron_entangled_state)
-				else:
+				if self.network.noise_parameters["NoisyEntangledState"]:
 					if charge_state_fail_NV0 == 1:
 						self.network.get_node(items[1]).subcomponents["nv_center_quantum_processor"].NV_state = "NV0"
 					if charge_state_fail_NV1 == 1:
@@ -329,6 +326,7 @@ class Global_cont_Protocol(Protocol):
 						operation_duration_time = 5555.55*counter #5555.55 comes from 2.5(ms)/450(entanglement attempts) look at the paper
 						# print(f"the operation duration time is {operation_duration_time}")
 						time_message_to_NV_centers = ['wait', operation_duration_time]
+
 						port_out_1 = self.controller.ports["Out_nvnode0"]
 						port_out_2 = self.controller.ports["Out_nvnode1"]
 						port_out_1.tx_output(time_message_to_NV_centers)
@@ -340,23 +338,34 @@ class Global_cont_Protocol(Protocol):
 						# print(f"the qubit state is {electron_GHZ}")
 						
 						assign_qstate(electrons, electron_entangled_state)
+						#X rotation on the electron
+						Xmessage = ["excite_mw", '0', np.pi/self.controller.elec_rabi_reg[0], self.controller.elec_freq_reg[0], 0]
+						port_out_1.tx_output(Xmessage)
+						yield self.await_port_input(port_out_1)
 						diamond = self.network.get_node(items[1]).subcomponents["nv_center_quantum_processor"]
 						# for k in range(len(diamond.mem_positions)-2): #-2 because there is a memory position for the electron and an additional one for a photon emission (only needed for mathmetical perposes)
 						# The iterater value skips the value for the electron position
-							
+						value = self.network.noise_parameters["DephasingEntanglementNoise"]
 							# iterater_value = k+1
-						delta_w = 0
-						tau_decay = 0
-						p_deph = (1 - alpha_A) / 2 * (1 - np.exp(-(delta_w * tau_decay) ** 2 / 2))
-						error_model = DephasingNoiseModelCarbon(prob_of_dephasing=p_deph)
-						# number_of_attempts = NVSingleClickMagicDistributor._get_number_of_attempts(delivery)
-						carbon_qubits = [diamond.peek(carbon_iterator_value) for carbon_iterator_value in range(1,len(diamond.mem_positions)-2)]
-						error_model.noise_operation_own(
-							qubits=carbon_qubits,
-							number_of_applications=counter,
-							diamond = diamond)
+						print(f"the dephasing network parameter value is {value}")
+						if self.network.noise_parameters["DephasingEntanglementNoise"]:
+							delta_w = 0
+							tau_decay = 0
+							p_deph = (1 - alpha_A) / 2 * (1 - np.exp(-(delta_w * tau_decay) ** 2 / 2))
+							error_model = DephasingNoiseModelCarbon(prob_of_dephasing=p_deph)
+							# number_of_attempts = NVSingleClickMagicDistributor._get_number_of_attempts(delivery)
+							carbon_qubits = [diamond.peek(carbon_iterator_value) for carbon_iterator_value in range(1,len(diamond.mem_positions)-2)]
+							error_model.noise_operation_own(
+								qubits=carbon_qubits,
+								number_of_applications=counter,
+								diamond = diamond)
+				else:
+					
 						# yield self.await_timer(1)
 					# assign_qstate(electrons, electron_GHZ)
+					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
+					# print(f"the qubit state is {electron_GHZ}")
+					assign_qstate(electrons, electron_entangled_state)
 
 					
 				
@@ -1850,6 +1859,7 @@ class Laser_protocol(Protocol):
 			laser_name = port_in.rx_input().items[0]
 			power = float(self.diamond.supercomponent.supercomponent.subcomponents[laser_name+"_laser"].laser_properties["power"])
 			absorption_rate = 5.8526867e-17*power/1.88*1e9
+			# print(f"the absorption rate is {absorption_rate}")
 			# print(f"the absorption rate is {absorption_rate}")
 			# Get the electron from the diamond, so it can be measured
 			self.electron = self.diamond.peek(0)[0]	

@@ -44,6 +44,34 @@ with h5py.File(filename, "r") as f:
     ds_obj = f[a_group_key]      # returns as a h5py dataset object
     ds_arr = f[a_group_key][()]  # returns as a numpy array
 # q1, q2, q3, q4 = create_qubits(num_qubits = 4)
+
+import os
+import json
+path = os.path.realpath(__file__)
+dir = os.path.dirname(path)
+dir = dir.replace('current_simulator_code', 'json_data_storage')
+# save_direct = d.chdir("..")'
+# filename = 'test_rabi_error_lower_res.json'
+dec = '0'
+filename = 'ramsey_fringe_'+dec+'.json'
+# filename = 'ramsey_fringe_electron_latest_detuning0B0.0004detuning10000000.0.json'
+filename = 'ramsey_fringe_electron_new_detuning5000.0B0.0004detuning1000000.0hahn.json'
+filename = 'ramsey_fringe_carbon_for_experiment_withwaitdetuning_extra.json'
+# filename = 'ramsey_fringe_c13_latest_carbon0B0.0004.json'
+# filename = 'rabi_decoherence_test_T2=1s_B=4.5mT.json'
+filename = "first_measurement_values_noiseless.json"
+filename = "first_measurement_values_noisefull_withT2detuning.json"
+# filename = "first_measurement_values_noisefull_withT2detuning_nopi.json"
+# filename = "first_measurement_values_noisefull_withoutT2detuning.json"
+
+
+fileopener = dir+"/" +filename
+with open(fileopener, 'r') as f:
+    data = json.load(f)
+print(data)
+P_value_amount = len(data["P_values"])
+iterations = data["number_of_iterations"]
+print(f"the amount of succesfull runs is {P_value_amount} with {iterations} iterations. This makes a succes rate of {P_value_amount/iterations*100}%")
 # # assign_qstate(q2, np.diag([0.5,0.5]))
 # # assign_qstate(q1, np.diag([0.5,0.5]))
 # # operate(q1,H)
