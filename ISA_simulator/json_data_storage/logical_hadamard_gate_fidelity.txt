@@ -1,0 +1,306 @@
+##### PRESET REGISTERS #####
+LDi 0 Counter
+LDi 5000 Iterations
+
+##### START OF THE LOOP #####
+LABEL start
+
+##### INITIALIZE ALL THE CARBON QUBITS IN THE NODES #####
+# initialize Node 1 with D1 and D3
+Initialize q0
+Initialize q1
+SwapEC q0 2
+SwapEC q1 2
+
+# initialize Node 2 with D2 and D3
+Initialize q0
+Initialize q1
+SwapEC q0 3 
+SwapEC q1 3
+
+##### START LOGICAL STATE INITIALIZATION #####
+# For p_0: No gates needed YC1(theta=0) YC3(theta=0) ZC3(phi=0)
+
+# For p_1: Apply YC1(theta=pi) YC3(theta=pi) ZC3(phi=0)
+## Apply rotation theta to D1
+#QgateUC q0 2 3.14159265 1.57079632679 0
+## Apply rotation theta to D3
+#QgateUC q0 3 3.14159265 1.57079632679 0
+
+# For p_plus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=0)
+## Apply rotation theta to D1
+#QgateUC q0 2 1.57079632679 1.57079632679 0
+## Apply rotation theta to D3
+#QgateUC q0 3 1.57079632679 1.57079632679 0
+
+# For p_minus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=pi)
+## Apply rotation theta to D1
+#QgateUC q0 2 1.57079632679 1.57079632679 0
+## Apply rotation theta to D3
+#QgateUC q0 3 1.57079632679 1.57079632679 0
+## Apply rotation phi to D3
+#qgatez q0 3 3.14159265
+
+# For p_i_plus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=pi/2)
+## Apply rotation theta to D1
+#QgateUC q0 2 1.57079632679 1.57079632679 0
+## Apply rotation theta to D3
+#QgateUC q0 3 1.57079632679 1.57079632679 0
+## Apply rotation phi to D3
+#qgatez q0 3 1.57079632679
+
+# For p_i_minus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=-pi/2)
+## Apply rotation theta to D1
+QgateUC q0 2 1.57079632679 1.57079632679 0
+## Apply rotation theta to D3
+QgateUC q0 3 1.57079632679 1.57079632679 0
+## Apply rotation phi to D3
+qgatez q0 3 -1.57079632679
+
+
+#printstate q0 2 q1 2 q0 3 q1 3
+
+##### XXXX STABILIZER #####
+# Create the Bell pair
+NVentangle_real NVnode0 NVnode1
+#QgateE q0 0 3.14 
+
+# CX rotation on D1
+qgatecc q0 2 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D2
+qgatecc q1 2 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# CX rotation on D3
+qgatecc q0 3 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D4
+qgatecc q1 3 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# H on E1
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# H on E2
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+# Measure the electrons E1 and E2
+measure q0
+measure q1
+
+# Post select with XXXX stabilizer
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasureOne < 0 stop
+
+
+##### Z1Z3 STABILIZER #####
+Initialize q0
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# CZ rotation on D1
+QgateCC q0 2 0 3.14 
+QgateCC q0 2 1.57 3.14 
+QgateZ q0 0 4.71
+
+# CZ rotation on D3
+QgateCC q0 3 0 3.14 
+QgateCC q0 3 1.57 3.14 
+QgateZ q0 0 4.71
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# Measure E1
+measure q0
+
+# Post select with Z1Z3 stabilizer
+BR MeasureResultRegNVnode0 < 0 stop
+
+##### Z2Z4 STABILIZER #####
+Initialize q1
+
+# H on E2
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+# CZ rotation on D2
+QgateCC q1 2 0 3.14 
+QgateCC q1 2 1.57 3.14 
+QgateZ q1 0 4.71
+
+# CZ rotation on D4
+QgateCC q1 3 0 3.14 
+QgateCC q1 3 1.57 3.14 
+QgateZ q1 0 4.71
+
+# H on E2
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+# Measure E2
+measure q1
+
+# Post select with Z2Z4 stabilizer
+BR MeasureResultRegNVnode1 < 0 stop
+
+
+##### LOGICAL HADAMARD #####
+{
+qgateuc q0 2 1.5707963267949 1.5707963267949 1
+qgateuc q1 2 1.5707963267949 1.5707963267949 1
+}
+{
+qgateuc q0 2 0.0 3.1415926535898 1
+qgateuc q1 2 0.0 3.1415926535898 1
+}
+{
+qgateuc q0 3 1.5707963267949 1.5707963267949 1
+qgateuc q1 3 1.5707963267949 1.5707963267949 1
+}
+{
+qgateuc q0 3 0.0 3.1415926535898 1
+qgateuc q1 3 0.0 3.1415926535898 1
+}
+
+##### XXXX STABILIZER #####
+# Create the Bell pair
+NVentangle_real NVnode0 NVnode1
+#QgateE q0 0 3.14 
+
+# CX rotation on D1
+qgatecc q0 2 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D2
+qgatecc q1 2 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# CX rotation on D3
+qgatecc q0 3 0.0 3.1415926535898
+qgatez q0 0 1.57
+
+# CX rotation on D4
+qgatecc q1 3 0.0 3.1415926535898
+qgatez q1 0 1.57
+
+# H on E1
+qgatee q0 1.5707963267949 1.5707963267949
+qgatee q0 0.0 3.1415926535898
+
+# H on E2
+qgatee q1 1.5707963267949 1.5707963267949
+qgatee q1 0.0 3.1415926535898
+
+# Measure the electrons E1 and E2
+measure q0
+measure q1
+
+# Post select with XXXX stabilizer
+MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
+BR TotalMeasureOne < 0 stop
+
+
+##### Z1Z3 STABILIZER #####
+Initialize q0
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# CZ rotation on D1
+QgateCC q0 2 0 3.14 
+QgateCC q0 2 1.57 3.14 
+QgateZ q0 0 4.71
+
+# CZ rotation on D3
+QgateCC q0 3 0 3.14 
+QgateCC q0 3 1.57 3.14 
+QgateZ q0 0 4.71
+
+# H on E1
+QgateE q0 1.57 1.57 
+QgateE q0 0 3.14 
+
+# Measure E1
+measure q0
+
+# Post select with Z1Z3 stabilizer
+BR MeasureResultRegNVnode0 < 0 stop
+
+##### Z2Z4 STABILIZER #####
+Initialize q1
+
+# H on E2
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+# CZ rotation on D2
+QgateCC q1 2 0 3.14 
+QgateCC q1 2 1.57 3.14 
+QgateZ q1 0 4.71
+
+# CZ rotation on D4
+QgateCC q1 3 0 3.14 
+QgateCC q1 3 1.57 3.14 
+QgateZ q1 0 4.71
+
+# H on E2
+QgateE q1 1.57 1.57 
+QgateE q1 0 3.14 
+
+# Measure E2
+measure q1
+
+# Post select with Z2Z4 stabilizer
+BR MeasureResultRegNVnode1 < 0 stop
+
+
+##### STORING THE DATA QUBIT DENSITY MATRIX #####
+# Data qubit index increased by one for this feature
+#statestore surface q0 3 q1 3 q0 4 q1 4
+logical_analysis q0 3 q1 3 q0 4 q1 4
+
+
+################## TRASH BELOW #################
+##### MEASURE THE DATA QUBITS #####
+#swapce q0 x 2  
+#Measure q0
+#ST MeasureResultRegNVnode0 DataQubit1
+
+#swapce q0 x 3  
+#Measure q0
+#ST MeasureResultRegNVnode0 DataQubit3
+
+#swapce q1 x 2  
+#Measure q1
+#ST MeasureResultRegNVnode1 DataQubit2
+
+#swapce q1 x 3  
+#Measure q1
+#ST MeasureResultRegNVnode1 DataQubit4
+
+################## TRASH ENDS #################
+
+LABEL stop
+ADDi Counter 1
+Printer Counter
+BR Counter < Iterations start
+
+
+##### OUTPUT DATA STORAGE #####
+#DataStorageName process_tomography_p0
+#DataStorageName process_tomography_p1
+#DataStorageName process_tomography_pplus
+#DataStorageName process_tomography_pminus
+#DataStorageName process_tomography_piplus
+DataStorageName process_tomography_piminus
+OutputStore P_value
