@@ -1,15 +1,17 @@
 NodeNumber 2
 QubitNumber 5
-printstates False
+printstates 0
 PhotonDetectionProbability 1
 NodeDistance 4e-3
 PhotonDistance 2e-3
 Detuning 0
+T2Detuning 0
 ElectronDecoherence 0
 ElectronRelaxation 0
 CarbonDecoherence 0
+CarbonDecoherenceEffect 0
 CarbonRelaxation 0
-Crosstalk False
+CrosstalkOff 1
 NoZPrecession 1
 OscillatingField 400e-6
 frame rotating
@@ -18,3 +20,5 @@ clk 0
 clkLocal 0
 StaticField 0.1890
 RotationWithPi 0
+DephasingEntanglementNoise 0
+NoisyEntangledState 0
