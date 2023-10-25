@@ -9,13 +9,13 @@ T2Detuning 1
 ElectronDecoherence 5e3
 ElectronRelaxation 0
 CarbonDecoherence 5e6
-CarbonDecoherenceEffect 0
+CarbonDecoherenceEffect 1
 CarbonRelaxation 0
 CrosstalkOff 1
 NoZPrecession 1
 OscillatingField 400e-6
 frame rotating
-WaitDetuning 1
+WaitDetuning 0
 clk 0
 clkLocal 0
 StaticField 0.1890
