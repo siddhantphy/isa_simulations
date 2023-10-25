@@ -20,16 +20,17 @@ set_qstate_formalism(QFormalism.DM)
 
 def main(savename = None, filename = None, node_number = 4,qubit_number = 2, photon_detection_prob = 1, printstates = False, storedata = None,node_distance = 4e-3, photo_distance = 2e-3, noiseless = False, detuning = 0, electron_T2 = 0, electron_T1 = 0, carbon_T1 = 0, carbon_T2 = 0, single_instruction = True, B_osc = 400e-6,no_z_precission = 1, frame = "rotating", wait_detuning = 0, clk = 0, clk_local = 0,B_z = 40e-3,rotation_with_pi = 0,Fault_tolerance_check = False, **kwargs):
 	# Set the filename, which text file needs to be read, this text file should contain QISA specific instructions
-	np.random.seed(int(kwargs["mp_process"])+10)
+	# np.random.seed(int(kwargs["mp_process"])+10)
 	random.seed(str(os.getpid()) + str(time.time()))
 	start_time = time.perf_counter()
 	# np.set_printoptions(precision=2, suppress = True)
-	print(f" the arguments are {kwargs}")
-	print(f"the kwargs are {kwargs}")
-	if kwargs["seed"] == True:
-		noiseless = True
-	print(f"the number of nodes is {node_number} with qubits {qubit_number}")
-	print(f"savename is {savename}")
+	# print(f" the arguments are {kwargs}")
+	# print(f"the kwargs are {kwargs}")
+	if "seed" in kwargs:
+		if kwargs["seed"] == True:
+			noiseless = True
+	# print(f"the number of nodes is {node_number} with qubits {qubit_number}")
+	# print(f"savename is {savename}")
 	if savename != None:
 		storedata = savename
 	if filename == None:
@@ -76,7 +77,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = 'ramsey_fringe_experiment.txt'
 		# filename = "Ramsey_hahn_echo_experiment.txt"
 		# filename = 'ramsey_fringe_test.txt'
-		# filename = 'ramsey_fringe_c13.txt'
+		filename = 'ramsey_fringe_c13.txt'
 		# filename = 'T1_measurement_C13.txt'
 		# filename = "Matti_test.txt"
 		# filename = "Last_matti_test.txt"
@@ -88,7 +89,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 		# filename = "test_input_rabi_check.txt"
 		# filename = 'test_input_photondetector.txt'
 		# filename = 'Logical_hadamard_gate_fidelity.txt'
-		filename = 'logical_hadamard_gate_fidelity.txt'
+		# filename = 'logical_hadamard_gate_fidelity.txt'
 	else:
 		filename = filename[0] #fix later
 		# filename = filename + '.txt'
@@ -170,6 +171,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	electron_T2 = float(parameter_dict["ElectronDecoherence"])
 	electron_T1 = float(parameter_dict["ElectronRelaxation"])
 	carbon_T2 = float(parameter_dict["CarbonDecoherence"])
+	carbon_T2_on = bool(int(parameter_dict["CarbonDecoherenceEffect"]))
 	carbon_T1 = float(parameter_dict["CarbonRelaxation"])
 	single_instruction = bool(int(parameter_dict["CrosstalkOff"]))
 	no_z_precission = int(parameter_dict["NoZPrecession"])
@@ -184,7 +186,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	print(f'dephasing parameter in tests {DephasingEntanglementNoise}')
 	
 	# Setup the network by calling the network setup function
-	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi)
+	network = network_setup(node_number = node_number, photon_detection_probability = photon_detection_prob,qubit_number = qubit_number, noiseless = noiseless, node_distance = node_distance, photo_distance = photo_distance, detuning = detuning, electron_T2 = electron_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1, carbon_T2=carbon_T2, single_instruction=single_instruction, B_osc = B_osc, no_z_precission=no_z_precission, frame = frame, wait_detuning=wait_detuning, clk_local = clk_local,B_z = B_z,rotation_with_pi = rotation_with_pi, carbon_T2_on=carbon_T2_on)
 	network.noiseless = noiseless
 	network.noise_parameters = {}
 	network.noise_parameters["T2_carbon"] = carbon_T2
@@ -270,7 +272,7 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 			# qubit_state = [str(x) for x in network.qubit_store]
 			memory_values["qubit_state"] = qubit_state
 
-		data_storer(memory_values,data_stored_name+".json")
+		# data_storer(memory_values,data_stored_name+".json")
 		
 	# counter_list = network.get_node("controller").memory['SuccesRegPerMeasure'.lower()]
 	# measure_list = network.get_node("controller").memory['MeasureValuePerMeasure'.lower()]
@@ -321,11 +323,15 @@ def main(savename = None, filename = None, node_number = 4,qubit_number = 2, pho
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_photonentanglement_decoherence_detuning_dmrep_latest"+str(savename)+"_100meas.json")
 	# data_storer({'counter_values_per_measure':counter_list,"measure_values_per_measure":measure_list,"measure_amount_total":measure_amount,"total_memory_count":Total_succes_count,"angle":sweepAngle,"total_measurment_amount_per_sweep":total_measurement_value}, "new_surface-7_results-sweep_check_2_dmrep_latest_100meas_intialisation.json")
 	# return_value = kwargs["mp_queue"].get()
-	return_value = {}
-	return_value["values"] = memory_values
-	print(f"the following value will be put {return_value}")
-	kwargs["mp_queue"].put(return_value)
-	# return memory_values
+	memory_values["DataStorageName"] = data_stored_name
+	if "mp_queue" in kwargs:
+		return_value = {}
+		
+		return_value["values"] = memory_values
+		print(f"the following value will be put {return_value}")
+		kwargs["mp_queue"].put(return_value)
+	else:
+		return memory_values
 
 	
 	
@@ -579,6 +585,10 @@ def run_multiprocess(
 	output["Noise_parameters"] = outputs[0]["values"]['parameters']
 	output["number_of_cores"] = processes
 	output["number_of_iterations"] = iterations
+	if "DataStorageName" in outputs[0]["value"]:
+	# if outputs[0]["values"].has_key("DataStorageName"):
+		output["DataStorageName"] = output[0]["values"]["DataStorageName"]
+	# output[]
 	# if benchmark:
 	#     benchmarks = [partial_output["benchmark"] for partial_output in outputs]
 
@@ -646,9 +656,21 @@ if __name__ == "__main__":
 	duration_list = []
 	start_time = time.perf_counter()
 	if len(sys.argv) == 1:
-		main(node_number = 2,qubit_number=3, printstates=True, detuning = 1e3, electron_T2= 5e3, carbon_T2 = 5e6 ,single_instruction = False, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 10e6)
+		results = main(node_number = 2,qubit_number=3, printstates=True, detuning = 1e3, electron_T2= 5e3, carbon_T2 = 5e6 ,single_instruction = False, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 10e6)
+		end_time = time.perf_counter()-start_time
+		results["time_duration"] = end_time
+		if "DataStorageName" in results:
+		# if results.has_key("DataStorageName"):
+			storagename = str(results.pop("DataStorageName"))
+			data_storer(results,storagename+".json")
 	elif sys.argv[1] == "noiseless":
-		main(node_number = 2,qubit_number=5, printstates=True, detuning = 0, electron_T2= 5e3, carbon_T2 = 56e6 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
+		results = main(node_number = 2,qubit_number=5, printstates=True, detuning = 0, electron_T2= 5e3, carbon_T2 = 56e6 ,single_instruction = True, no_z_precission=1,B_osc = 400e-6, frame = "rotating", wait_detuning=0, clk = 0, clk_local = 0,B_z = 0.1890,rotation_with_pi = 0)
+		end_time = time.perf_counter()-start_time
+		results["time_duration"] = end_time
+		if "DataStorageName" in results:
+		# if results.has_key("DataStorageName"):
+			storagename = str(results.pop("DataStorageName"))
+			data_storer(results,storagename+".json")
 		# duration_list.append(time.perf_counter() - start_time)
 		#carbon decoherence time is taken from paper sent by nic
 		# with open("/home/fwmderonde/virt_env_simulator/ISA_simulator/json_data_storage/duration_time_surface-7_itself_4cores_4tasks.json", 'w') as file_object:
@@ -669,7 +691,12 @@ if __name__ == "__main__":
 		results = run_multiprocess(iterations=iterations,QISA_file = QISA_file, noiseless = noiseless_arg)
 		end_time = time.perf_counter()-start_time
 		results["time_duration"] = end_time
-		data_storer(results,"first_measurement_values_noiseless.json")
+		if "DataStorageName" in results:
+		# if results.has_key("DataStorageName"):
+			storagename = str(results.pop("DataStorageName"))
+			data_storer(results,storagename+".json")
+		else:
+			data_storer(results,"first_measurement_values_noiseless.json")
 		# plot_points[size].append((rate, no_error /iterations))
 
 			# duration_list.append(time.perf_counter() - start_time)

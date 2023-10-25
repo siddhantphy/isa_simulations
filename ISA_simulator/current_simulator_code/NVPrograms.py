@@ -31,9 +31,9 @@ class Programs_microwave(QuantumProgram):
 		# Zero field splitting of the electron ms = -1,1 states with regards to the ms = 0 state. 
 		# This is the resonance frequency when there is no magnetic field present
 		D = 2.87e9  #Hz
-		decoherence_value = self.network.noise_parameters["T2_carbon"]
+		decoherence_value = self.network.noise_parameters["T2_carbon"]*1e-9
 		T2detuning = self.network.noise_parameters["T2Detuning"]
-		carbon_detuning_decoherence_based = 0 if (T2detuning == True or decoherence_value == 0) else 1/(2*np.pi*decoherence_value) #2*np.pi*
+		carbon_detuning_decoherence_based = 0 if (T2detuning == False or decoherence_value == 0) else 1/(2*np.pi*decoherence_value) #2*np.pi*
 		carbon_jitter_detuning = np.random.rand(len(self.diamond.supercomponent.subcomponents["local_controller"].carbon_frequencies))*carbon_detuning_decoherence_based-carbon_detuning_decoherence_based/2 #use this value in order to perform the waiting operation with detuning
 		N_state_p0 = abs(self.N_state[0][0])
 		# print(decoherence_value)
@@ -398,11 +398,11 @@ class Programs_microwave(QuantumProgram):
 					# Apply a rotation to every nucleus based on the parameters, the spin precision around the z axis is also included.
 					self.apply(instruction = INSTR_CZXY,operator = op, qubit_indices = [0,iterater_value])		
 			elif self.frame == "rotating":
-			
+				
 				# omega_mw = omega_0-self.detuning
 				angle = self.detuning*duration*(2*np.pi)
 				self.apply(instruction = INSTR_ROT_Z, qubit_indices = [0],angle = angle)
-				for k in range(len(self.diamond.mem_positions)-2): #-2 because there is a memory position for the electron and an additional one for a photon emission (only needed for mathmetical perposes)
+				for k in range(len(self.diamond.mem_positions)-3): #-2 because there is a memory position for the electron and an additional one for a photon emission (only needed for mathmetical perposes)
 					# The iterater value skips the value for the electron position
 					iterater_value = k+1
 
@@ -413,12 +413,23 @@ class Programs_microwave(QuantumProgram):
 					omega_1_c = omega_L_c-A_parr_c
 					# print(f"duration is {duration}")
 					# print(f"rotation is {A_parr_c*duration*2*np.pi}")
+					carbon_jitter_stacking = 0
+					time = 0 
+					while time < duration:
+						time += 100e-9
+						carbon_jitter_detuning_repetative = np.random.rand()*carbon_detuning_decoherence_based-carbon_detuning_decoherence_based/2 #use this value in order to perform the waiting operation with detuning
+						carbon_jitter_stacking += carbon_jitter_detuning_repetative
 					# in case of -self.detuning, this results in +detuning.
+					# print(f"the stacking detuning is {carbon_jitter_stacking}")
+					# carbon_jitter_stacking = 0
+					# print(f"the carbon detuning value is {1/(2*np.pi*decoherence_value)}")
 					# Make the operation matrix needed for the control of the carbon nuclei
-					first_matrix_value = (cos(-2*np.pi*(A_parr_c+self.detuning)*duration/2)+1j*sin(-2*np.pi*(A_parr_c+self.detuning)*duration/2))
+					first_matrix_value = (cos(-2*np.pi*(A_parr_c+self.detuning+carbon_jitter_stacking)*duration/2)+1j*sin(-2*np.pi*(A_parr_c+self.detuning+carbon_jitter_stacking)*duration/2))
+					# print(f"the A_parr value is {A_parr_c} with detuning {self.detuning} and carbon jitter {carbon_jitter_stacking}")
+					# print(f"this makes in total {(A_parr_c+self.detuning+carbon_jitter_stacking)*duration/2}")
 					# first_matrix_value = (cos(-1*(2*np.pi*(self.detuning)+A_parr_c)*duration/2)+1j*sin(-1*(2*np.pi*(self.detuning)+A_parr_c)*duration/2))
 
-					second_matrix_value = (cos(-2*np.pi*(self.detuning)*duration/2)+1j*sin(-2*np.pi*(self.detuning)*duration/2))
+					second_matrix_value = (cos(-2*np.pi*(self.detuning+carbon_jitter_stacking)*duration/2)+1j*sin(-2*np.pi*(self.detuning+carbon_jitter_stacking)*duration/2))
 					# first_matrix_value = (1+1j)
 					# second_matrix_value = (cos(-(self.detuning)*duration/2)+1j*sin(-(self.detuning)*duration/2))
 

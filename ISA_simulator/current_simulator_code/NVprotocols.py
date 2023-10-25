@@ -182,10 +182,10 @@ class Global_cont_Protocol(Protocol):
 				qubit_store_list = []
 					# print(int((len(items)-2)/2)+2)
 					# print(range(2,int(len(items)+1),2))
-				for i in range(1,int((len(items))),2):
+				for printstate_iterator in range(1,int((len(items))),2):
 					# print(i)
 					# print(f"the value of i is {i} with node nvnode {str(items[i][1:])}")
-					qubit_store_list.append(self.network.get_node("nvnode"+str(items[i][1:])).qmemory.peek(int(items[i+1]))[0])
+					qubit_store_list.append(self.network.get_node("nvnode"+str(items[printstate_iterator][1:])).qmemory.peek(int(items[printstate_iterator+1]))[0])
 					# i +=1
 				qubit_matrix = reduced_dm(qubit_store_list)
 				print(qubit_matrix)
