@@ -7,11 +7,11 @@ from Components import *
 from netsquid.nodes.network import Network
 
 # Setup the network
-def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, node_number = 2, noiseless = True, CarbonAparr = None,photon_detection_probability=1, absorption_probability = 1, no_z_precission = 1, decay = False, photon_emission_noise = False, detuning = 0, electron_T2 = None, carbon_T2 = None, electron_T1 = None, carbon_T1 = None,single_instruction = True,B_osc = 400e-6, B_z = 40e-3,frame = "rotating", wait_detuning = 1,clk_local = 0,rotation_with_pi = 1):
+def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, node_number = 2, noiseless = True, CarbonAparr = None,photon_detection_probability=1, absorption_probability = 1, no_z_precission = 1, decay = False, photon_emission_noise = False, detuning = 0, electron_T2 = None, carbon_T2 = None, electron_T1 = None, carbon_T1 = None,single_instruction = True,B_osc = 400e-6, B_z = 40e-3,frame = "rotating", wait_detuning = 1,clk_local = 0,rotation_with_pi = 1, carbon_T2_on = 1):
 	NV_node_list = [] # Create an empty list, so the nodes can be appended to this list, creating a list of nodenames
 	
 	# If values for the parallel hyperfine parameter for the carbon nuclei is given, that values are used, otherwise predifined values are used
-	if CarbonAparr == None:
+	if CarbonAparr == None: #27218.2, 110e3, 20e3
 		pre_def_A_parr = [27218.2, 110e3, 20e3,-48e3,110e3,300e3,400e3,500e3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #213e3 7e3# Predefined values for the parallel hyperfine parameter for the carbon nuclei
 		pre_def_A_perp = [131784.6]+[0]*16 #213e3 7e3# Predefined values for the parallel hyperfine parameter for the carbon nuclei
 
@@ -20,6 +20,11 @@ def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, 
 	
 	# In this for loop the wanted amount of nodes are going to be made, a quantum processor will made and added for every node.
 	for i in range(int(node_number)): 
+		if carbon_T2_on:
+			carbon_T2 = carbon_T2
+		else:
+			carbon_T2 = 0
+		# carbon_T2 = 0 #change later
 		NV_center_1 = NVQuantumProcessor(num_positions=int(qubit_number)+1, noiseless=noiseless, electron_T2=electron_T2,carbon_T2=carbon_T2, electron_T1 = electron_T1, carbon_T1 = carbon_T1)  # make 3 quantum NV processors# the name of the nv center is 'nv_center_quantum_processor'
 		NV_center_1.NV_state = 'NV-'
 		for k in range(len(NV_center_1.mem_positions)-2): 
