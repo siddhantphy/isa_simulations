@@ -365,7 +365,7 @@ class Global_cont_Protocol(Protocol):
 					# assign_qstate(electrons, electron_GHZ)
 					electron_GHZ = np.array([checker,zeroline,zeroline,checker])
 					# print(f"the qubit state is {electron_GHZ}")
-					assign_qstate(electrons, electron_entangled_state)
+					assign_qstate(electrons, electron_GHZ)
 
 					
 				
@@ -634,13 +634,14 @@ class Global_cont_Protocol(Protocol):
 				qubit_store_list = []
 					# print(int((len(items)-2)/2)+2)
 					# print(range(2,int(len(items)+1),2))
-				for i in range(1,int((len(items))),2):
+				for logical_analysis_iterator in range(1,int((len(items))),2):
 					# print(i)
 					# print(f"the value of i is {i} with node nvnode {str(items[i][1:])}")
-					qubit_store_list.append(self.network.get_node("nvnode"+str(items[i][1:])).qmemory.peek(int(items[i+1]))[0])
+					qubit_store_list.append(self.network.get_node("nvnode"+str(items[logical_analysis_iterator][1:])).qmemory.peek(int(items[logical_analysis_iterator+1]))[0])
 					# i +=1
 				# carbon_matrix = reduced_dm([carbon_1,carbon_2, carbon_3, carbon_4])
 				# print(qubit_store_list)
+				
 				qubit_matrix = reduced_dm(qubit_store_list)
 				np.trace(qubit_matrix)
 				# print('sup')
@@ -648,9 +649,14 @@ class Global_cont_Protocol(Protocol):
 				# self.network.qubit_store = qubit_matrix
 				# qubit_matrix = self.network.qubit_store
 				# p_store = []
-				p = np.real(get_analytical_logical_expectation_values(qubit_matrix))
+				if len(qubit_store_list)== 1:
+					p = np.real(get_analytical_logical_expectation_values(qubit_matrix,operation_space = "physical"))
+				else:
+					p = np.real(get_analytical_logical_expectation_values(qubit_matrix,operation_space = "logical"))
+
 				# self.network.p_value = p
 				p = [p[0],p[1],p[2]]
+				# print(f"the p value is {p}")
 				# self.p_store.append(p)
 				# print(p)
 				# np.array(p)

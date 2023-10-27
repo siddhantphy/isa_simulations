@@ -73,9 +73,9 @@ def network_setup(node_distance = 4e-3,qubit_number = 2, photo_distance = 2e-3, 
 		network.add_connection(controller, NV_node_list[i], connection = connection_2, label = "classical_"+str(i)+"2C", port_name_node1 = "In_nvnode"+str(i)+"data", port_name_node2 = "Out_nvnode"+str(i)+"data")
 
 		network.add_connection(controller, NV_node_list[i], connection = connection, label = "classical_C2"+str(i), port_name_node1 = "Out_nvnode"+str(i), port_name_node2 = "In_nvnode"+str(i))
-		print("before subcomponent adder")
+		# print("before subcomponent adder")
 		subcomponent_adder(NV_node_list[i], photon_detection_probability, absorption_probability, no_z_precission, decay, photon_emission_noise, detuning,single_instruction,B_osc,frame, wait_detuning,clk_local,rotation_with_pi)
-		print("after subcomponent adder")
+		# print("after subcomponent adder")
 		if i <int(node_number)-1:
 			entanglement_components_adder(network, i)
 			entanglement_component_connection_adder(network, i)

@@ -70,20 +70,29 @@ def create_cardinal_states_distance_2():
 
     i_L = np.outer(ket_0L, ket_0L) + np.outer(ket_1L, ket_1L)
     z_L = np.outer(ket_0L, ket_0L) - np.outer(ket_1L, ket_1L)
-    x_l = np.outer(ket_0L, ket_1L) + np.outer(ket_1L, ket_0L)
+    x_L = np.outer(ket_0L, ket_1L) + np.outer(ket_1L, ket_0L)
     y_L = -1j * np.outer(ket_0L, ket_1L) + 1j* np.outer(ket_1L, ket_0L)
 
-    return [ket_0L, ket_1L, ket_plus_L, ket_minus_L, ket_iplus_L, ket_iminus_L], [i_L, x_l, y_L, z_L]
-_, logical_states_dist_2 = create_cardinal_states_distance_2()
+    return [ket_0L, ket_1L, ket_plus_L, ket_minus_L, ket_iplus_L, ket_iminus_L], [i_L, x_L, y_L, z_L]
 
 
-def get_analytical_logical_expectation_values(qubit_matrix = None):
+def get_analytical_logical_expectation_values(qubit_matrix = None,operation_space = "logical"):
     """ To calculate all the expectation values {I_L, X_L, Y_L, Z_L} logical Pauli operatos. """
 
     r_logical = [0, 0, 0]
     #rho logical will be taken from our txt file
     rho_logical = qubit_matrix
     # rho_logical = get_instantaneous_data_qubit_density_matrix([node_A, node_B])
+    I = [[1,0],[0,1]]
+    X = [[0,1],[1,0]]
+    Y = [[0,-1j],[1j,0]]
+    Z = [[1,0],[0,-1]]
+
+
+    if operation_space == "physical":
+        logical_states_dist_2 = [I,X,Y,Z]
+    else:
+        _, logical_states_dist_2 = create_cardinal_states_distance_2()
 
     # print(np.real(np.trace(logical_states_dist_2[0] @ rho_logical)))
     r_logical[0] = np.trace(logical_states_dist_2[1] @ rho_logical)
