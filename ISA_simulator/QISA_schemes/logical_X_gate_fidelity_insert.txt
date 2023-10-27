@@ -1,6 +1,6 @@
 ##### PRESET REGISTERS #####
 LDi 0 Counter
-LDi 5000 Iterations
+LDi 200 Iterations
 
 ##### START OF THE LOOP #####
 LABEL start
@@ -249,7 +249,7 @@ logical_analysis q0 3 q1 3 q0 4 q1 4
 #ST MeasureResultRegNVnode1 DataQubit4
 
 ################## TRASH ENDS #################
-
+print succes
 LABEL stop
 ADDi Counter 1
 Printer Counter

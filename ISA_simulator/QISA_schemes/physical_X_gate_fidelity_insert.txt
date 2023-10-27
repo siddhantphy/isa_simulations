@@ -1,0 +1,18 @@
+LDi 0 Counter
+LDi 150 Iterations
+
+LABEL start
+
+initialize q0
+swapec q0 0
+#initialise in the correct states
+
+QgateUC q0 0 0 3.14 0
+logical_analysis q0 1
+LABEL stop
+ADDi Counter 1
+#Printer Counter
+BR Counter < Iterations start
+#swapce q0 z 0  
+#Measure q0
+OutputStore P_value

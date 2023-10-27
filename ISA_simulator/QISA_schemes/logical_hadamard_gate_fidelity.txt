@@ -1,6 +1,6 @@
 ##### PRESET REGISTERS #####
 LDi 0 Counter
-LDi 100 Iterations
+LDi 50 Iterations
 
 ##### START OF THE LOOP #####
 LABEL start
@@ -23,9 +23,9 @@ SwapEC q1 3
 
 # For p_1: Apply YC1(theta=pi) YC3(theta=pi) ZC3(phi=0)
 ## Apply rotation theta to D1
-#QgateUC q0 2 3.14159265 1.57079632679 0
+#QgateUC q0 2 1.57079632679 3.14159265 0
 ## Apply rotation theta to D3
-#QgateUC q0 3 3.14159265 1.57079632679 0
+#QgateUC q0 3 1.57079632679 3.14159265 0
 
 # For p_plus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=0)
 ## Apply rotation theta to D1
@@ -35,11 +35,11 @@ SwapEC q1 3
 
 # For p_minus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=pi)
 ## Apply rotation theta to D1
-#QgateUC q0 2 1.57079632679 1.57079632679 0
+QgateUC q0 2 1.57079632679 1.57079632679 0
 ## Apply rotation theta to D3
-#QgateUC q0 3 1.57079632679 1.57079632679 0
+QgateUC q0 3 4.71238897679 1.57079632679 0
 ## Apply rotation phi to D3
-#qgatez q0 3 3.14159265
+#qgatez q0 4 3.14159265
 
 # For p_i_plus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=pi/2)
 ## Apply rotation theta to D1
@@ -47,22 +47,23 @@ SwapEC q1 3
 ## Apply rotation theta to D3
 #QgateUC q0 3 1.57079632679 1.57079632679 0
 ## Apply rotation phi to D3
-#qgatez q0 3 1.57079632679
+#qgatez q0 4 1.57079632679
 
 # For p_i_minus: Apply YC1(theta=pi/2) YC3(theta=pi/2) ZC3(phi=-pi/2)
 ## Apply rotation theta to D1
-QgateUC q0 2 1.57079632679 1.57079632679 0
+#QgateUC q0 2 1.57079632679 1.57079632679 0
 ## Apply rotation theta to D3
-QgateUC q0 3 1.57079632679 1.57079632679 0
+#QgateUC q0 3 1.57079632679 1.57079632679 0
 ## Apply rotation phi to D3
-qgatez q0 3 -1.57079632679
+#qgatez q0 4 -1.57079632679
 
 
-printstate q0 2 q1 2
+#printstate q0 2 q1 2 q0 3 q1 3
 
 ##### XXXX STABILIZER #####
 # Create the Bell pair
 NVentangle_real NVnode0 NVnode1
+#QgateE q0 0 3.14 
 
 # CX rotation on D1
 qgatecc q0 2 0.0 3.1415926535898
@@ -93,6 +94,7 @@ measure q0
 measure q1
 
 # Post select with XXXX stabilizer
+print i am before measure test XXXX 1
 MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 BR TotalMeasureOne < 0 stop
 
@@ -122,6 +124,7 @@ QgateE q0 0 3.14
 measure q0
 
 # Post select with Z1Z3 stabilizer
+print i am before measure test Z1Z3 1
 BR MeasureResultRegNVnode0 < 0 stop
 
 ##### Z2Z4 STABILIZER #####
@@ -149,30 +152,32 @@ QgateE q1 0 3.14
 measure q1
 
 # Post select with Z2Z4 stabilizer
+print i am before measure test Z2Z4 1
 BR MeasureResultRegNVnode1 < 0 stop
 
 
 ##### LOGICAL HADAMARD #####
-{
-qgateuc q0 2 1.5707963267949 1.5707963267949 1
-qgateuc q1 2 1.5707963267949 1.5707963267949 1
-}
-{
-qgateuc q0 2 0.0 3.1415926535898 1
-qgateuc q1 2 0.0 3.1415926535898 1
-}
-{
-qgateuc q0 3 1.5707963267949 1.5707963267949 1
-qgateuc q1 3 1.5707963267949 1.5707963267949 1
-}
-{
-qgateuc q0 3 0.0 3.1415926535898 1
-qgateuc q1 3 0.0 3.1415926535898 1
-}
+#{
+qgateuc q0 2 1.5707963267949 1.5707963267949 0
+qgateuc q1 2 1.5707963267949 1.5707963267949 0
+#}
+#{
+qgateuc q0 2 0.0 3.1415926535898 0
+qgateuc q1 2 0.0 3.1415926535898 0
+#}
+#{
+qgateuc q0 3 1.5707963267949 1.5707963267949 0
+qgateuc q1 3 1.5707963267949 1.5707963267949 0
+#}
+#{
+#qgateuc q0 3 0.0 3.1415926535898 0
+#qgateuc q1 3 0.0 3.1415926535898 0
+#}
 
 ##### XXXX STABILIZER #####
 # Create the Bell pair
 NVentangle_real NVnode0 NVnode1
+#QgateE q0 0 3.14 
 
 # CX rotation on D1
 qgatecc q0 2 0.0 3.1415926535898
@@ -203,6 +208,7 @@ measure q0
 measure q1
 
 # Post select with XXXX stabilizer
+print i am before measure test XXXX 2
 MUL TotalMeasureOne MeasureResultRegNVnode0 MeasureResultRegNVnode1
 BR TotalMeasureOne < 0 stop
 
@@ -232,6 +238,7 @@ QgateE q0 0 3.14
 measure q0
 
 # Post select with Z1Z3 stabilizer
+print i am before measure test Z1Z3 2
 BR MeasureResultRegNVnode0 < 0 stop
 
 ##### Z2Z4 STABILIZER #####
@@ -259,12 +266,14 @@ QgateE q1 0 3.14
 measure q1
 
 # Post select with Z2Z4 stabilizer
+print i am before measure test Z2Z4 2
 BR MeasureResultRegNVnode1 < 0 stop
 
 
 ##### STORING THE DATA QUBIT DENSITY MATRIX #####
 # Data qubit index increased by one for this feature
 #statestore surface q0 3 q1 3 q0 4 q1 4
+print i am actually here
 logical_analysis q0 3 q1 3 q0 4 q1 4
 
 
@@ -298,7 +307,7 @@ BR Counter < Iterations start
 #DataStorageName process_tomography_p0
 #DataStorageName process_tomography_p1
 #DataStorageName process_tomography_pplus
-#DataStorageName process_tomography_pminus
+DataStorageName process_tomography_pminus
 #DataStorageName process_tomography_piplus
-DataStorageName process_tomography_piminus
+#DataStorageName process_tomography_piminus
 OutputStore P_value
